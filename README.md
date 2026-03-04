@@ -7,6 +7,7 @@ PWA mobile-first para iPhone (Safari + Add to Home Screen) con rutinas multiples
 - Recordar la rutina activa del dispositivo y pedir confirmacion antes de cambiarla.
 - Registrar sets/reps/peso/notas por rutina y por dia.
 - Mantener media local y externa para consulta rapida.
+- Incluir rutinas base preconfiguradas (ejemplo: `Workout Tracker Split`).
 
 ## Stack
 - React 19 + Vite 7 + TypeScript

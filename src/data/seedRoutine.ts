@@ -29,6 +29,15 @@ const defaultRoutine: Routine = {
   isArchived: false,
 }
 
+const workoutTrackerRoutine: Routine = {
+  id: 'routine-workout-tracker',
+  name: 'Workout Tracker Split',
+  description: 'Rutina importada desde el repo personal workout-tracker (Push/Leg/Pull/Upper/Lower).',
+  createdAt: SEED_TIMESTAMP,
+  updatedAt: SEED_TIMESTAMP,
+  isArchived: false,
+}
+
 const dayTemplates: Array<Omit<RoutineDay, 'routineId'>> = [
   { id: 'day-1', name: 'Dia 1', focus: 'Torso A (hombros/espalda)', order: 1 },
   { id: 'day-2', name: 'Dia 2', focus: 'Pierna A (isquios/gluteo)', order: 2 },
@@ -180,10 +189,156 @@ const seedExercises: RoutineExercise[] = exerciseTemplates.map((exercise) => ({
   routineId: defaultRoutine.id,
 }))
 
+const workoutTrackerDayTemplates: Array<Omit<RoutineDay, 'routineId'>> = [
+  { id: 'wt-day-push', name: 'Push Day', focus: 'Pecho / hombro / triceps', order: 1 },
+  { id: 'wt-day-leg', name: 'Leg Day', focus: 'Pierna / abdomen', order: 2 },
+  { id: 'wt-day-pull', name: 'Pull Day', focus: 'Espalda / biceps', order: 3 },
+  { id: 'wt-day-upper', name: 'Upper Body', focus: 'Torso completo', order: 4 },
+  { id: 'wt-day-lower', name: 'Lower Body', focus: 'Posterior pierna / abdomen', order: 5 },
+]
+
+const workoutTrackerExerciseTemplates: Array<Omit<RoutineExercise, 'routineId'>> = [
+  {
+    id: 'wt-ex-incline-barbell-bench-press', dayId: 'wt-day-push', slug: 'incline-barbell-bench-press', name: 'Incline Barbell Bench Press',
+    muscleGroup: 'Pecho superior', targetSets: 2, targetReps: '5-8', targetWeight: 0, restSeconds: 120,
+    notes: 'Basado en workout-tracker.', order: 1,
+  },
+  {
+    id: 'wt-ex-lateral-raise-push', dayId: 'wt-day-push', slug: 'lateral-raise-push', name: 'Lateral Raise',
+    muscleGroup: 'Deltoides lateral', targetSets: 3, targetReps: '10-15', targetWeight: 0, restSeconds: 75,
+    notes: 'Basado en workout-tracker.', order: 2,
+  },
+  {
+    id: 'wt-ex-flat-bench', dayId: 'wt-day-push', slug: 'flat-bench', name: 'Flat Bench',
+    muscleGroup: 'Pecho', targetSets: 2, targetReps: '5-10', targetWeight: 0, restSeconds: 120,
+    notes: 'Basado en workout-tracker.', order: 3,
+  },
+  {
+    id: 'wt-ex-tricep-dips', dayId: 'wt-day-push', slug: 'tricep-dips', name: 'Tricep Dips',
+    muscleGroup: 'Triceps', targetSets: 2, targetReps: '5-8', targetWeight: 0, restSeconds: 90,
+    notes: 'Basado en workout-tracker.', order: 4,
+  },
+  {
+    id: 'wt-ex-tricep-extension', dayId: 'wt-day-push', slug: 'tricep-extension', name: 'Tricep Extension',
+    muscleGroup: 'Triceps', targetSets: 2, targetReps: '5-10', targetWeight: 0, restSeconds: 75,
+    notes: 'Basado en workout-tracker.', order: 5,
+  },
+  {
+    id: 'wt-ex-squats', dayId: 'wt-day-leg', slug: 'squats', name: 'Squats',
+    muscleGroup: 'Cuadriceps / gluteos', targetSets: 2, targetReps: '5-8', targetWeight: 0, restSeconds: 120,
+    notes: 'Basado en workout-tracker.', order: 1,
+  },
+  {
+    id: 'wt-ex-leg-extension-leg', dayId: 'wt-day-leg', slug: 'leg-extension-leg-day', name: 'Leg Extension',
+    muscleGroup: 'Cuadriceps', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 75,
+    notes: 'Basado en workout-tracker.', order: 2,
+  },
+  {
+    id: 'wt-ex-leg-curl-leg', dayId: 'wt-day-leg', slug: 'leg-curl-leg-day', name: 'Leg Curl',
+    muscleGroup: 'Isquiotibiales', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 75,
+    notes: 'Basado en workout-tracker.', order: 3,
+  },
+  {
+    id: 'wt-ex-calf-raise-leg', dayId: 'wt-day-leg', slug: 'calf-raise-leg-day', name: 'Calf Raise',
+    muscleGroup: 'Gemelos', targetSets: 3, targetReps: '10-15', targetWeight: 0, restSeconds: 60,
+    notes: 'Basado en workout-tracker.', order: 4,
+  },
+  {
+    id: 'wt-ex-ab-crunch-machine-leg', dayId: 'wt-day-leg', slug: 'ab-crunch-machine-leg-day', name: 'Ab Crunch Machine',
+    muscleGroup: 'Abdomen', targetSets: 3, targetReps: '10-15', targetWeight: 0, restSeconds: 60,
+    notes: 'Basado en workout-tracker.', order: 5,
+  },
+  {
+    id: 'wt-ex-lat-pull-down-pull', dayId: 'wt-day-pull', slug: 'lat-pull-down-pull-day', name: 'Lat Pull Down',
+    muscleGroup: 'Dorsales', targetSets: 2, targetReps: '5-10', targetWeight: 0, restSeconds: 90,
+    notes: 'Basado en workout-tracker.', order: 1,
+  },
+  {
+    id: 'wt-ex-machine-row-pronated', dayId: 'wt-day-pull', slug: 'machine-row-pronated-grip', name: 'Machine Row (Pronated Grip)',
+    muscleGroup: 'Espalda media', targetSets: 2, targetReps: '5-10', targetWeight: 0, restSeconds: 90,
+    notes: 'Basado en workout-tracker.', order: 2,
+  },
+  {
+    id: 'wt-ex-close-grip-row', dayId: 'wt-day-pull', slug: 'close-grip-row', name: 'Close Grip Row',
+    muscleGroup: 'Dorsales / romboides', targetSets: 2, targetReps: '5-10', targetWeight: 0, restSeconds: 90,
+    notes: 'Basado en workout-tracker.', order: 3,
+  },
+  {
+    id: 'wt-ex-bicep-curls-pull', dayId: 'wt-day-pull', slug: 'bicep-curls-pull-day', name: 'Bicep Curls',
+    muscleGroup: 'Biceps', targetSets: 3, targetReps: '10-15', targetWeight: 0, restSeconds: 75,
+    notes: 'Basado en workout-tracker.', order: 4,
+  },
+  {
+    id: 'wt-ex-rear-delt-fly', dayId: 'wt-day-pull', slug: 'rear-delt-fly', name: 'Rear Delt Fly',
+    muscleGroup: 'Deltoides posterior', targetSets: 3, targetReps: '10-15', targetWeight: 0, restSeconds: 75,
+    notes: 'Basado en workout-tracker.', order: 5,
+  },
+  {
+    id: 'wt-ex-incline-chest-press', dayId: 'wt-day-upper', slug: 'incline-chest-press', name: 'Incline Chest Press',
+    muscleGroup: 'Pecho superior', targetSets: 2, targetReps: '5-10', targetWeight: 0, restSeconds: 90,
+    notes: 'Basado en workout-tracker.', order: 1,
+  },
+  {
+    id: 'wt-ex-lateral-raise-upper', dayId: 'wt-day-upper', slug: 'lateral-raise-upper-body', name: 'Lateral Raise',
+    muscleGroup: 'Deltoides lateral', targetSets: 3, targetReps: '10-15', targetWeight: 0, restSeconds: 75,
+    notes: 'Basado en workout-tracker.', order: 2,
+  },
+  {
+    id: 'wt-ex-lat-pull-down-upper', dayId: 'wt-day-upper', slug: 'lat-pull-down-upper-body', name: 'Lat Pull Down',
+    muscleGroup: 'Dorsales', targetSets: 2, targetReps: '5-10', targetWeight: 0, restSeconds: 90,
+    notes: 'Basado en workout-tracker.', order: 3,
+  },
+  {
+    id: 'wt-ex-bicep-curls-upper', dayId: 'wt-day-upper', slug: 'bicep-curls-upper-body', name: 'Bicep Curls',
+    muscleGroup: 'Biceps', targetSets: 3, targetReps: '10-15', targetWeight: 0, restSeconds: 75,
+    notes: 'Basado en workout-tracker.', order: 4,
+  },
+  {
+    id: 'wt-ex-tricep-extensions-upper', dayId: 'wt-day-upper', slug: 'tricep-extensions-upper-body', name: 'Tricep Extensions',
+    muscleGroup: 'Triceps', targetSets: 2, targetReps: '5-10', targetWeight: 0, restSeconds: 75,
+    notes: 'Basado en workout-tracker.', order: 5,
+  },
+  {
+    id: 'wt-ex-romanian-deadlift', dayId: 'wt-day-lower', slug: 'romanian-deadlift', name: 'Romanian Deadlift',
+    muscleGroup: 'Isquiotibiales / gluteos', targetSets: 2, targetReps: '5-8', targetWeight: 0, restSeconds: 120,
+    notes: 'Basado en workout-tracker.', order: 1,
+  },
+  {
+    id: 'wt-ex-leg-extension-lower', dayId: 'wt-day-lower', slug: 'leg-extension-lower-body', name: 'Leg Extension',
+    muscleGroup: 'Cuadriceps', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 75,
+    notes: 'Basado en workout-tracker.', order: 2,
+  },
+  {
+    id: 'wt-ex-leg-curl-lower', dayId: 'wt-day-lower', slug: 'leg-curl-lower-body', name: 'Leg Curl',
+    muscleGroup: 'Isquiotibiales', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 75,
+    notes: 'Basado en workout-tracker.', order: 3,
+  },
+  {
+    id: 'wt-ex-calf-raise-lower', dayId: 'wt-day-lower', slug: 'calf-raise-lower-body', name: 'Calf Raise',
+    muscleGroup: 'Gemelos', targetSets: 3, targetReps: '10-15', targetWeight: 0, restSeconds: 60,
+    notes: 'Basado en workout-tracker.', order: 4,
+  },
+  {
+    id: 'wt-ex-ab-crunch-machine-lower', dayId: 'wt-day-lower', slug: 'ab-crunch-machine-lower-body', name: 'Ab Crunch Machine',
+    muscleGroup: 'Abdomen', targetSets: 3, targetReps: '10-15', targetWeight: 0, restSeconds: 60,
+    notes: 'Basado en workout-tracker.', order: 5,
+  },
+]
+
+const workoutTrackerSeedDays: RoutineDay[] = workoutTrackerDayTemplates.map((day) => ({
+  ...day,
+  routineId: workoutTrackerRoutine.id,
+}))
+
+const workoutTrackerSeedExercises: RoutineExercise[] = workoutTrackerExerciseTemplates.map((exercise) => ({
+  ...exercise,
+  routineId: workoutTrackerRoutine.id,
+}))
+
 export const seedRoutineBundle: RoutineBundle = {
-  routines: [defaultRoutine],
-  days: seedDays,
-  exercises: seedExercises,
+  routines: [defaultRoutine, workoutTrackerRoutine],
+  days: [...seedDays, ...workoutTrackerSeedDays],
+  exercises: [...seedExercises, ...workoutTrackerSeedExercises],
 }
 
 export const seedSettings: AppSettings = {
@@ -349,18 +504,31 @@ const migrateLegacyRoutineState = (value: unknown): RoutineBundle | null => {
   }
 }
 
+const ensureBuiltInRoutines = (bundle: RoutineBundle): RoutineBundle => {
+  const hasWorkoutTracker = bundle.routines.some((routine) => routine.id === workoutTrackerRoutine.id)
+  if (hasWorkoutTracker) {
+    return bundle
+  }
+
+  return {
+    routines: [...bundle.routines, workoutTrackerRoutine],
+    days: [...bundle.days, ...workoutTrackerSeedDays],
+    exercises: [...bundle.exercises, ...workoutTrackerSeedExercises],
+  }
+}
+
 export const normalizeRoutineBundleState = (rawState: unknown): RoutineBundle => {
   const v3 = sanitizeRoutineBundle(rawState)
   if (v3) {
-    return v3
+    return ensureBuiltInRoutines(v3)
   }
 
   const v2 = migrateLegacyRoutineState(rawState)
   if (v2) {
-    return v2
+    return ensureBuiltInRoutines(v2)
   }
 
-  return seedRoutineBundle
+  return ensureBuiltInRoutines(seedRoutineBundle)
 }
 
 const isLogRecord = (value: unknown): value is Record<string, unknown> => {

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-03-04 (new routine import)
+- Added a new built-in routine: `Workout Tracker Split` based on `julioccv13/workout-tracker`.
+- Added compatibility migration so existing local states automatically receive the new routine if missing.
+
 ## 2026-03-04 (search and dashboard polish)
 - Reworked internet media search ranking to be query-driven with dynamic expansion (not strict tag-only filtering).
 - Improved handling for terms like `bulgarian` by adding query expansion (`bulgarian squat`, `split squat`).
