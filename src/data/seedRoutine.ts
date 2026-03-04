@@ -1,5 +1,5 @@
-import type { AppSettings, MediaItem, RoutineState } from '../types/training'
 import { mediaCatalog } from './mediaCatalog'
+import type { AppSettings, MediaItem, MediaRole, RoutineState } from '../types/training'
 
 export const STORAGE_KEYS = {
   routine: 'training_app:v1:routine',
@@ -159,39 +159,101 @@ export const seedRoutine: RoutineState = {
 
 export const seedSettings: AppSettings = {
   units: 'kg',
-  schemaVersion: 1,
+  schemaVersion: 2,
 }
 
-const cleanupVariant = (slug: string): string => slug.replace(/-2$/, '')
+const isValidMediaRole = (value: unknown): value is MediaRole =>
+  value === 'single' || value === 'multi' || value === 'reference'
 
-const slugToExerciseId = new Map(seedRoutine.exercises.map((ex) => [cleanupVariant(ex.slug), ex.id]))
+const slugToExerciseId = new Map(seedRoutine.exercises.map((exercise) => [exercise.slug, exercise.id]))
+const exerciseIdSet = new Set(seedRoutine.exercises.map((exercise) => exercise.id))
+
+const uniqueStrings = (items: string[]): string[] => Array.from(new Set(items.filter(Boolean)))
 
 export const seedMedia: MediaItem[] = mediaCatalog.map((record) => {
-  const normalized = cleanupVariant(record.slug)
-  const exerciseId = record.exerciseSlug ? (slugToExerciseId.get(cleanupVariant(record.exerciseSlug)) ?? null) : null
+  const mappedExerciseIds = uniqueStrings(
+    (record.exerciseSlugs ?? []).map((exerciseSlug) => slugToExerciseId.get(exerciseSlug) ?? ''),
+  )
+
+  const exerciseIds = record.isDuplicate ? [] : mappedExerciseIds
 
   return {
     id: record.id,
     title: record.title,
-    slug: normalized,
+    slug: record.slug,
     type: record.type,
     path: record.path,
-    status: exerciseId ? 'assigned' : 'unassigned',
-    exerciseId,
+    role: record.role,
+    status: exerciseIds.length > 0 ? 'assigned' : 'unassigned',
+    exerciseIds,
     source: 'docs',
     isDuplicate: record.isDuplicate,
     checksum: record.checksum,
   }
 })
 
-export const seedExerciseMediaMap = seedMedia.reduce<Record<string, string[]>>((acc, media) => {
-  if (!media.exerciseId) {
-    return acc
+const sanitizeExerciseIds = (value: unknown): string[] => {
+  if (!value) {
+    return []
   }
-  if (!acc[media.exerciseId]) {
-    acc[media.exerciseId] = []
+
+  if (Array.isArray(value)) {
+    return uniqueStrings(value.filter((item): item is string => typeof item === 'string'))
   }
-  acc[media.exerciseId].push(media.id)
+
+  if (typeof value === 'string') {
+    return [value]
+  }
+
+  return []
+}
+
+export const normalizeMediaState = (rawState: unknown): MediaItem[] => {
+  if (!Array.isArray(rawState)) {
+    return seedMedia
+  }
+
+  const rawById = new Map<string, Record<string, unknown>>()
+
+  rawState.forEach((item) => {
+    if (!item || typeof item !== 'object') {
+      return
+    }
+    const candidate = item as Record<string, unknown>
+    if (typeof candidate.id !== 'string') {
+      return
+    }
+    rawById.set(candidate.id, candidate)
+  })
+
+  return seedMedia.map((canonical) => {
+    const stored = rawById.get(canonical.id)
+    if (!stored) {
+      return canonical
+    }
+
+    const exerciseIds = canonical.isDuplicate
+      ? []
+      : sanitizeExerciseIds(stored.exerciseIds ?? stored.exerciseId).filter((exerciseId) => exerciseIdSet.has(exerciseId))
+
+    const role = isValidMediaRole(stored.role) ? stored.role : canonical.role
+
+    return {
+      ...canonical,
+      role,
+      exerciseIds,
+      status: exerciseIds.length > 0 ? 'assigned' : 'unassigned',
+    }
+  })
+}
+
+export const seedExerciseMediaMap = seedMedia.reduce<Record<string, string[]>>((acc, mediaItem) => {
+  mediaItem.exerciseIds.forEach((exerciseId) => {
+    if (!acc[exerciseId]) {
+      acc[exerciseId] = []
+    }
+    acc[exerciseId].push(mediaItem.id)
+  })
   return acc
 }, {})
 

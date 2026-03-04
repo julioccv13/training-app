@@ -9,6 +9,7 @@ Mobile-first PWA for iPhone browser usage with:
 - 4-day editable training routine
 - Local workout logging (sets/reps/weight/RPE/rest/notes)
 - Media catalog (images/videos) from `~/workspace/personal/docs/training app`
+- Media roles: `single`, `multi`, `reference` with multi-exercise associations
 
 ## Paths
 - Repo root: `~/workspace/personal/training app`
@@ -30,3 +31,4 @@ Mobile-first PWA for iPhone browser usage with:
 - `npm run lint`
 - `npm run build`
 - Smoke test in iPhone Safari or responsive browser
+- Verify single/multi video behavior in workout screen

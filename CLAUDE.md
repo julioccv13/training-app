@@ -12,13 +12,15 @@ Personal training app built as a PWA for iPhone Safari with offline-friendly loc
 - `src/types/`: app contracts and entities
 - `src/data/`: seed routine and media catalog
 - `src/lib/`: storage and helper utilities
+- `scripts/`: automation scripts (media catalog generation)
 - `public/media/`: images/videos served by GitHub Pages
 - `docs/`: architecture, media policy, operations
 
 ## Product behavior
 - Editable 4-day routine (days + exercises CRUD)
 - Workout logs stored on-device
-- Exercise media assignment and playback
+- Exercise media assignment and playback (single/multi/reference roles)
+- One media can be linked to multiple exercises (`exerciseIds[]`)
 - Backup export/import in JSON
 
 ## Deploy notes
@@ -36,5 +38,5 @@ npm run build
 ## Testing focus
 - CRUD day/exercise
 - workout session save/reload
-- media assignment and video playback
+- media assignment and video playback (single prioritized, multi as related library)
 - backup export/import

@@ -1,6 +1,7 @@
 export type MediaType = 'image' | 'video'
 
 export type MediaStatus = 'assigned' | 'unassigned'
+export type MediaRole = 'single' | 'multi' | 'reference'
 
 export interface TrainingDay {
   id: string
@@ -30,8 +31,9 @@ export interface MediaItem {
   slug: string
   type: MediaType
   path: string
+  role: MediaRole
   status: MediaStatus
-  exerciseId: string | null
+  exerciseIds: string[]
   source: 'docs'
   isDuplicate: boolean
   checksum: string | null

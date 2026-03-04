@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import './App.css'
-import { routineWithMedia, seedMedia, seedSettings, STORAGE_KEYS } from './data/seedRoutine'
+import { normalizeMediaState, routineWithMedia, seedMedia, seedSettings, STORAGE_KEYS } from './data/seedRoutine'
 import { calcWeeklyVolume, createId, emptyWorkoutSet, sortExercises, toSlug, toTitle } from './lib/helpers'
 import { downloadJson, loadJson, readJsonFile, saveJson } from './lib/storage'
-import type { AppSettings, Exercise, MediaItem, RoutineState, WorkoutLog, WorkoutSet } from './types/training'
+import type { AppSettings, Exercise, MediaItem, MediaRole, RoutineState, WorkoutLog, WorkoutSet } from './types/training'
 
 type TabKey = 'dashboard' | 'routine' | 'workout' | 'media' | 'settings'
+type MediaFilter = 'all' | 'single' | 'multi' | 'reference' | 'unassigned'
 
 type WorkoutDraft = Record<string, { sets: WorkoutSet[]; notes: string }>
 
@@ -20,15 +21,24 @@ const tabs: { key: TabKey; label: string }[] = [
 
 const resolveMediaPath = (path: string): string => `${import.meta.env.BASE_URL}${path}`
 
+const roleLabel = (role: MediaRole): string => {
+  if (role === 'single') {
+    return 'Single'
+  }
+  if (role === 'multi') {
+    return 'Multi'
+  }
+  return 'Reference'
+}
+
 const buildRoutineWithMedia = (routine: RoutineState, media: MediaItem[]): RoutineState => {
   const map = media.reduce<Record<string, string[]>>((acc, item) => {
-    if (!item.exerciseId) {
-      return acc
-    }
-    if (!acc[item.exerciseId]) {
-      acc[item.exerciseId] = []
-    }
-    acc[item.exerciseId].push(item.id)
+    item.exerciseIds.forEach((exerciseId) => {
+      if (!acc[exerciseId]) {
+        acc[exerciseId] = []
+      }
+      acc[exerciseId].push(item.id)
+    })
     return acc
   }, {})
 
@@ -42,9 +52,15 @@ const buildRoutineWithMedia = (routine: RoutineState, media: MediaItem[]): Routi
 }
 
 const initialRoutine = loadJson<RoutineState>(STORAGE_KEYS.routine, routineWithMedia)
-const initialMedia = loadJson<MediaItem[]>(STORAGE_KEYS.media, seedMedia)
+const initialMediaRaw = loadJson<unknown>(STORAGE_KEYS.media, seedMedia)
+const initialMedia = normalizeMediaState(initialMediaRaw)
 const initialLogs = loadJson<WorkoutLog[]>(STORAGE_KEYS.logs, [])
-const initialSettings = loadJson<AppSettings>(STORAGE_KEYS.settings, seedSettings)
+const loadedSettings = loadJson<AppSettings>(STORAGE_KEYS.settings, seedSettings)
+const initialSettings: AppSettings = {
+  ...seedSettings,
+  ...loadedSettings,
+  schemaVersion: seedSettings.schemaVersion,
+}
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabKey>('dashboard')
@@ -59,6 +75,7 @@ function App() {
   const [newExerciseGroup, setNewExerciseGroup] = useState('')
   const [workoutDraft, setWorkoutDraft] = useState<WorkoutDraft>({})
   const [workoutMessage, setWorkoutMessage] = useState('')
+  const [mediaFilter, setMediaFilter] = useState<MediaFilter>('all')
 
   useEffect(() => {
     saveJson(STORAGE_KEYS.routine, routine)
@@ -81,14 +98,17 @@ function App() {
       setSelectedDayId('')
       return
     }
+
     if (!routine.days.some((day) => day.id === selectedDayId)) {
       setSelectedDayId(routine.days[0].id)
     }
   }, [routine.days, selectedDayId])
 
+  const sortedDays = useMemo(() => [...routine.days].sort((a, b) => a.order - b.order), [routine.days])
+
   const selectedDay = useMemo(
-    () => routine.days.sort((a, b) => a.order - b.order).find((day) => day.id === selectedDayId),
-    [routine.days, selectedDayId],
+    () => sortedDays.find((day) => day.id === selectedDayId),
+    [sortedDays, selectedDayId],
   )
 
   const dayExercises = useMemo(
@@ -102,16 +122,19 @@ function App() {
     return map
   }, [routine.exercises])
 
+  const sortedExercisesByName = useMemo(
+    () => [...routine.exercises].sort((a, b) => a.name.localeCompare(b.name)),
+    [routine.exercises],
+  )
+
   const dayStats = useMemo(
     () =>
-      routine.days
-        .sort((a, b) => a.order - b.order)
-        .map((day) => ({
-          ...day,
-          exerciseCount: routine.exercises.filter((exercise) => exercise.dayId === day.id).length,
-          logCount: logs.filter((log) => log.dayId === day.id).length,
-        })),
-    [routine.days, routine.exercises, logs],
+      sortedDays.map((day) => ({
+        ...day,
+        exerciseCount: routine.exercises.filter((exercise) => exercise.dayId === day.id).length,
+        logCount: logs.filter((log) => log.dayId === day.id).length,
+      })),
+    [sortedDays, routine.exercises, logs],
   )
 
   const weeklyVolume = useMemo(() => calcWeeklyVolume(logs), [logs])
@@ -182,7 +205,9 @@ function App() {
       return
     }
 
-    const exerciseIds = new Set(routine.exercises.filter((exercise) => exercise.dayId === dayId).map((exercise) => exercise.id))
+    const deletedExerciseIds = new Set(
+      routine.exercises.filter((exercise) => exercise.dayId === dayId).map((exercise) => exercise.id),
+    )
 
     const nextRoutine = {
       days: routine.days
@@ -191,22 +216,21 @@ function App() {
           ...day,
           order: idx + 1,
         })),
-      exercises: routine.exercises.filter((exercise) => !exerciseIds.has(exercise.id)),
+      exercises: routine.exercises.filter((exercise) => !deletedExerciseIds.has(exercise.id)),
     }
 
-    const nextMedia = media.map((item) =>
-      item.exerciseId && exerciseIds.has(item.exerciseId)
-        ? {
-            ...item,
-            exerciseId: null,
-            status: 'unassigned' as const,
-          }
-        : item,
-    )
+    const nextMedia = media.map((item) => {
+      const nextExerciseIds = item.exerciseIds.filter((exerciseId) => !deletedExerciseIds.has(exerciseId))
+      return {
+        ...item,
+        exerciseIds: nextExerciseIds,
+        status: nextExerciseIds.length > 0 ? ('assigned' as const) : ('unassigned' as const),
+      }
+    })
 
     setMedia(nextMedia)
     setRoutine(buildRoutineWithMedia(nextRoutine, nextMedia))
-    setLogs((current) => current.filter((log) => log.dayId !== dayId && !exerciseIds.has(log.exerciseId)))
+    setLogs((current) => current.filter((log) => log.dayId !== dayId && !deletedExerciseIds.has(log.exerciseId)))
   }
 
   const addExercise = (): void => {
@@ -265,15 +289,14 @@ function App() {
       return
     }
 
-    const nextMedia = media.map((item) =>
-      item.exerciseId === exerciseId
-        ? {
-            ...item,
-            exerciseId: null,
-            status: 'unassigned' as const,
-          }
-        : item,
-    )
+    const nextMedia = media.map((item) => {
+      const nextExerciseIds = item.exerciseIds.filter((id) => id !== exerciseId)
+      return {
+        ...item,
+        exerciseIds: nextExerciseIds,
+        status: nextExerciseIds.length > 0 ? ('assigned' as const) : ('unassigned' as const),
+      }
+    })
 
     setMedia(nextMedia)
     setLogs((current) => current.filter((log) => log.exerciseId !== exerciseId))
@@ -469,19 +492,45 @@ function App() {
     setWorkoutMessage(`Sesion guardada: ${entries.length} ejercicios registrados.`)
   }
 
-  const assignMediaToExercise = (mediaId: string, exerciseId: string | null): void => {
+  const toggleMediaExercise = (mediaId: string, exerciseId: string, checked: boolean): void => {
+    const nextMedia = media.map((item) => {
+      if (item.id !== mediaId || item.isDuplicate) {
+        return item
+      }
+
+      const nextExerciseIds = checked
+        ? Array.from(new Set([...item.exerciseIds, exerciseId]))
+        : item.exerciseIds.filter((id) => id !== exerciseId)
+
+      return {
+        ...item,
+        exerciseIds: nextExerciseIds,
+        status: nextExerciseIds.length > 0 ? ('assigned' as const) : ('unassigned' as const),
+      }
+    })
+
+    setMedia(nextMedia)
+    setRoutine((prev) => buildRoutineWithMedia(prev, nextMedia))
+  }
+
+  const clearMediaAssignments = (mediaId: string): void => {
     const nextMedia = media.map((item) => {
       if (item.id !== mediaId) {
         return item
       }
-
       return {
         ...item,
-        exerciseId,
-        status: exerciseId ? ('assigned' as const) : ('unassigned' as const),
+        exerciseIds: [],
+        status: 'unassigned' as const,
       }
     })
 
+    setMedia(nextMedia)
+    setRoutine((prev) => buildRoutineWithMedia(prev, nextMedia))
+  }
+
+  const updateMediaRole = (mediaId: string, role: MediaRole): void => {
+    const nextMedia = media.map((item) => (item.id === mediaId ? { ...item, role } : item))
     setMedia(nextMedia)
     setRoutine((prev) => buildRoutineWithMedia(prev, nextMedia))
   }
@@ -492,9 +541,24 @@ function App() {
       assigned: media.filter((item) => item.status === 'assigned').length,
       unassigned: media.filter((item) => item.status === 'unassigned').length,
       duplicates: media.filter((item) => item.isDuplicate).length,
+      single: media.filter((item) => item.role === 'single').length,
+      multi: media.filter((item) => item.role === 'multi').length,
+      reference: media.filter((item) => item.role === 'reference').length,
     }),
     [media],
   )
+
+  const filteredMedia = useMemo(() => {
+    return media.filter((item) => {
+      if (mediaFilter === 'all') {
+        return true
+      }
+      if (mediaFilter === 'unassigned') {
+        return item.exerciseIds.length === 0
+      }
+      return item.role === mediaFilter
+    })
+  }, [media, mediaFilter])
 
   const recentLogs = useMemo(() => logs.slice(0, 12), [logs])
 
@@ -517,19 +581,25 @@ function App() {
     try {
       const parsed = await readJsonFile<{
         routine: RoutineState
-        media: MediaItem[]
+        media: unknown
         logs: WorkoutLog[]
         settings: AppSettings
       }>(file)
 
-      if (!parsed.routine?.days || !parsed.routine?.exercises || !parsed.media || !parsed.settings) {
+      if (!parsed.routine?.days || !parsed.routine?.exercises || !parsed.settings) {
         throw new Error('Estructura invalida')
       }
 
-      setMedia(parsed.media)
-      setRoutine(buildRoutineWithMedia(parsed.routine, parsed.media))
+      const normalizedMedia = normalizeMediaState(parsed.media)
+
+      setMedia(normalizedMedia)
+      setRoutine(buildRoutineWithMedia(parsed.routine, normalizedMedia))
       setLogs(parsed.logs ?? [])
-      setSettings(parsed.settings)
+      setSettings({
+        ...seedSettings,
+        ...parsed.settings,
+        schemaVersion: seedSettings.schemaVersion,
+      })
       setWorkoutMessage('Backup importado correctamente.')
     } catch {
       setWorkoutMessage('No se pudo importar el archivo.')
@@ -557,7 +627,7 @@ function App() {
       <header className="topbar">
         <div>
           <h1>Training App</h1>
-          <p>Rutina de 4 dias, registro local y videos desde docs.</p>
+          <p>Rutina de 4 dias, registro local y videos con soporte single/multi desde docs.</p>
         </div>
         <span className="badge">{settings.units.toUpperCase()}</span>
       </header>
@@ -591,6 +661,8 @@ function App() {
               <p>{mediaCounts.total} archivos</p>
               <p>{mediaCounts.assigned} asignados</p>
               <p>{mediaCounts.unassigned} sin asignar</p>
+              <p>{mediaCounts.single} single</p>
+              <p>{mediaCounts.multi} multi</p>
               <p>{mediaCounts.duplicates} duplicados archivados</p>
             </article>
 
@@ -645,34 +717,32 @@ function App() {
               </div>
 
               <div className="day-list">
-                {routine.days
-                  .sort((a, b) => a.order - b.order)
-                  .map((day) => (
-                    <div key={day.id} className={day.id === selectedDayId ? 'day-card selected' : 'day-card'}>
-                      <label>
-                        Nombre
-                        <input
-                          value={day.name}
-                          onChange={(event) => updateDayField(day.id, 'name', event.target.value)}
-                        />
-                      </label>
-                      <label>
-                        Foco
-                        <input
-                          value={day.focus}
-                          onChange={(event) => updateDayField(day.id, 'focus', event.target.value)}
-                        />
-                      </label>
-                      <div className="row-actions">
-                        <button type="button" onClick={() => setSelectedDayId(day.id)}>
-                          Editar ejercicios
-                        </button>
-                        <button type="button" className="danger" onClick={() => deleteDay(day.id)}>
-                          Eliminar
-                        </button>
-                      </div>
+                {sortedDays.map((day) => (
+                  <div key={day.id} className={day.id === selectedDayId ? 'day-card selected' : 'day-card'}>
+                    <label>
+                      Nombre
+                      <input
+                        value={day.name}
+                        onChange={(event) => updateDayField(day.id, 'name', event.target.value)}
+                      />
+                    </label>
+                    <label>
+                      Foco
+                      <input
+                        value={day.focus}
+                        onChange={(event) => updateDayField(day.id, 'focus', event.target.value)}
+                      />
+                    </label>
+                    <div className="row-actions">
+                      <button type="button" onClick={() => setSelectedDayId(day.id)}>
+                        Editar ejercicios
+                      </button>
+                      <button type="button" className="danger" onClick={() => deleteDay(day.id)}>
+                        Eliminar
+                      </button>
                     </div>
-                  ))}
+                  </div>
+                ))}
               </div>
             </article>
 
@@ -795,13 +865,11 @@ function App() {
               <label>
                 Dia de entrenamiento
                 <select value={selectedDayId} onChange={(event) => setSelectedDayId(event.target.value)}>
-                  {routine.days
-                    .sort((a, b) => a.order - b.order)
-                    .map((day) => (
-                      <option key={day.id} value={day.id}>
-                        {day.name} - {day.focus}
-                      </option>
-                    ))}
+                  {sortedDays.map((day) => (
+                    <option key={day.id} value={day.id}>
+                      {day.name} - {day.focus}
+                    </option>
+                  ))}
                 </select>
               </label>
               <p className="hint">Fecha: {new Date().toLocaleDateString()}</p>
@@ -809,7 +877,16 @@ function App() {
 
             {dayExercises.map((exercise) => {
               const draft = workoutDraft[exercise.id]
-              const linkedMedia = media.filter((item) => item.exerciseId === exercise.id && item.type === 'video')
+              const linkedVideos = media.filter(
+                (item) =>
+                  item.type === 'video' &&
+                  !item.isDuplicate &&
+                  item.exerciseIds.includes(exercise.id),
+              )
+              const primaryVideo = linkedVideos.find((item) => item.role === 'single') ?? linkedVideos[0]
+              const relatedMultiVideos = linkedVideos.filter(
+                (item) => item.id !== primaryVideo?.id && item.role === 'multi',
+              )
 
               return (
                 <article key={exercise.id} className="panel full exercise-session">
@@ -820,15 +897,30 @@ function App() {
                     </p>
                   </div>
 
-                  {linkedMedia[0] && (
-                    <video
-                      controls
-                      muted
-                      playsInline
-                      preload="metadata"
-                      src={resolveMediaPath(linkedMedia[0].path)}
-                      className="exercise-video"
-                    />
+                  {primaryVideo && (
+                    <>
+                      <p className="hint">Guia principal ({roleLabel(primaryVideo.role)})</p>
+                      <video
+                        controls
+                        muted
+                        playsInline
+                        preload="metadata"
+                        src={resolveMediaPath(primaryVideo.path)}
+                        className="exercise-video"
+                      />
+                    </>
+                  )}
+
+                  {relatedMultiVideos.length > 0 && (
+                    <div className="mini-video-grid">
+                      <p className="hint">Biblioteca relacionada</p>
+                      {relatedMultiVideos.map((item) => (
+                        <div key={item.id} className="mini-video-item">
+                          <span>{item.title}</span>
+                          <video controls muted playsInline preload="metadata" src={resolveMediaPath(item.path)} />
+                        </div>
+                      ))}
+                    </div>
                   )}
 
                   <div className="sets-table-wrap">
@@ -934,19 +1026,61 @@ function App() {
             <article className="panel full">
               <h2>Bandeja de medios</h2>
               <p className="hint">
-                Puedes reasignar cualquier archivo. Los duplicados quedaron en archive/duplicates para trazabilidad.
+                Los videos multi se mantienen como biblioteca y pueden asociarse a varios ejercicios.
               </p>
+              <div className="row-actions">
+                <button
+                  type="button"
+                  className={mediaFilter === 'all' ? 'active-filter' : ''}
+                  onClick={() => setMediaFilter('all')}
+                >
+                  Todos
+                </button>
+                <button
+                  type="button"
+                  className={mediaFilter === 'single' ? 'active-filter' : ''}
+                  onClick={() => setMediaFilter('single')}
+                >
+                  Single
+                </button>
+                <button
+                  type="button"
+                  className={mediaFilter === 'multi' ? 'active-filter' : ''}
+                  onClick={() => setMediaFilter('multi')}
+                >
+                  Multi
+                </button>
+                <button
+                  type="button"
+                  className={mediaFilter === 'reference' ? 'active-filter' : ''}
+                  onClick={() => setMediaFilter('reference')}
+                >
+                  Reference
+                </button>
+                <button
+                  type="button"
+                  className={mediaFilter === 'unassigned' ? 'active-filter' : ''}
+                  onClick={() => setMediaFilter('unassigned')}
+                >
+                  Sin asignar
+                </button>
+              </div>
             </article>
 
-            {media.map((item) => {
-              const linkedExercise = item.exerciseId ? exerciseById.get(item.exerciseId) : undefined
+            {filteredMedia.map((item) => {
+              const assignedNames = item.exerciseIds
+                .map((exerciseId) => exerciseById.get(exerciseId)?.name)
+                .filter((name): name is string => Boolean(name))
 
               return (
                 <article key={item.id} className="panel media-card">
                   <header>
                     <h3>{item.title}</h3>
                     <p>{item.type.toUpperCase()}</p>
-                    <p>{item.isDuplicate ? 'Duplicado' : 'Canonico'}</p>
+                    <div className="media-badges">
+                      <span className="media-badge">{roleLabel(item.role)}</span>
+                      {item.isDuplicate && <span className="media-badge media-badge-danger">Duplicado</span>}
+                    </div>
                   </header>
 
                   {item.type === 'video' ? (
@@ -956,23 +1090,41 @@ function App() {
                   )}
 
                   <label>
-                    Asignar a ejercicio
+                    Rol del archivo
                     <select
-                      value={item.exerciseId ?? ''}
-                      onChange={(event) => assignMediaToExercise(item.id, event.target.value || null)}
+                      value={item.role}
+                      onChange={(event) => updateMediaRole(item.id, event.target.value as MediaRole)}
                     >
-                      <option value="">Sin asignar</option>
-                      {routine.exercises
-                        .sort((a, b) => a.name.localeCompare(b.name))
-                        .map((exercise) => (
-                          <option key={exercise.id} value={exercise.id}>
-                            {exercise.name} ({exercise.muscleGroup})
-                          </option>
-                        ))}
+                      <option value="single">single</option>
+                      <option value="multi">multi</option>
+                      <option value="reference">reference</option>
                     </select>
                   </label>
 
-                  <p className="hint">Asignado: {linkedExercise ? linkedExercise.name : 'No'}</p>
+                  <div className="media-assignment-block">
+                    <p className="hint">Asociar a ejercicios (multi-seleccion)</p>
+                    {item.isDuplicate && <p className="hint">Duplicado bloqueado para evitar ruido en sesiones.</p>}
+                    <div className="media-assignment-grid">
+                      {sortedExercisesByName.map((exercise) => (
+                        <label key={`${item.id}-${exercise.id}`} className="checkbox-row">
+                          <input
+                            type="checkbox"
+                            checked={item.exerciseIds.includes(exercise.id)}
+                            disabled={item.isDuplicate}
+                            onChange={(event) => toggleMediaExercise(item.id, exercise.id, event.target.checked)}
+                          />
+                          <span>{exercise.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="row-actions">
+                      <button type="button" onClick={() => clearMediaAssignments(item.id)}>
+                        Limpiar asignaciones
+                      </button>
+                    </div>
+                  </div>
+
+                  <p className="hint">Asignado: {assignedNames.length > 0 ? assignedNames.join(', ') : 'No'}</p>
                   <p className="hint">Archivo: {item.path}</p>
                 </article>
               )
@@ -988,7 +1140,12 @@ function App() {
                 Unidad de peso
                 <select
                   value={settings.units}
-                  onChange={(event) => setSettings((prev) => ({ ...prev, units: event.target.value as 'kg' | 'lb' }))}
+                  onChange={(event) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      units: event.target.value as 'kg' | 'lb',
+                    }))
+                  }
                 >
                   <option value="kg">kg</option>
                   <option value="lb">lb</option>

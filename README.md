@@ -17,6 +17,7 @@ PWA mobile-first para iPhone (Safari + Add to Home Screen) con rutina editable d
 - `src/types/`: contratos de dominio
 - `src/data/`: semilla de rutina y catalogo de media
 - `src/lib/`: utilidades de storage y helpers
+- `scripts/generate_media_catalog.py`: regenera catalogo de media desde `docs`
 - `public/media/`: videos e imagenes servidos estaticamente
 - `docs/`: arquitectura, operaciones y organizacion de media
 
@@ -61,6 +62,8 @@ URL esperada:
   - `training_app:v1:media`
   - `training_app:v1:logs`
   - `training_app:v1:settings`
+- Migracion:
+  - si existian datos con formato antiguo (`exerciseId` unico), se migran automaticamente a `exerciseIds[]`.
 - Desde Ajustes:
   - Exportar JSON
   - Importar JSON
@@ -70,6 +73,9 @@ URL esperada:
 - La fuente original esta en `~/workspace/personal/docs/training app/media`.
 - En el repo se publica copia en `public/media/`.
 - Duplicados exactos se mantienen en `videos/archive/duplicates` para trazabilidad.
+- Cada media tiene rol: `single`, `multi` o `reference`.
+- `single` se usa como guia principal por ejercicio.
+- `multi` se conserva como biblioteca y se puede asociar a varios ejercicios.
 
 ## Referencias
 - Arquitectura: `docs/ARCHITECTURE.md`

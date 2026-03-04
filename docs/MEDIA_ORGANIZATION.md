@@ -13,9 +13,12 @@
 
 ## Rules applied
 - Se movieron originales WhatsApp a rutas normalizadas.
-- Videos renombrados con prefijo numerico + slug de ejercicio.
+- Videos renombrados en ingles con prefijo numerico + slug descriptivo.
 - Duplicados exactos detectados por SHA-256 se movieron a `archive/duplicates`.
 - Se mantuvo trazabilidad en `media_manifest.json`.
+- El catalogo de app se genera automaticamente con:
+  - `role=single|multi|reference`
+  - mapeo inicial de `exerciseSlugs` para asociaciones sugeridas
 
 ## Current inventory
 - 8 imagenes de referencia
@@ -26,3 +29,13 @@
 ## Project publish copy
 Para despliegue, la app usa copia de esta estructura en:
 - `~/workspace/personal/training app/public/media`
+
+## Catalog generation
+Desde el repo:
+```bash
+python3 scripts/generate_media_catalog.py
+```
+
+Esto actualiza:
+- `src/data/mediaCatalog.ts`
+- `~/workspace/personal/docs/training app/media/media_manifest.json`
