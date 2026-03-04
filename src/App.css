@@ -349,6 +349,42 @@ button:disabled {
   min-width: 70px;
 }
 
+.sets-mobile-list {
+  display: none;
+}
+
+.set-mobile-card {
+  border: 1px solid #d2dde4;
+  border-radius: 12px;
+  background: #fbfbf9;
+  padding: 0.55rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.set-mobile-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+}
+
+.set-mobile-head strong {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+.set-mobile-head button {
+  min-width: 34px;
+  padding: 0.35rem 0.45rem;
+}
+
+.set-mobile-grid {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .exercise-video {
   width: 100%;
   border-radius: 12px;
@@ -535,5 +571,21 @@ button:disabled {
   .media-library-grid,
   .media-results-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .sets-table-wrap {
+    display: none;
+  }
+
+  .sets-mobile-list {
+    display: grid;
+    gap: 0.55rem;
+    margin-top: 0.7rem;
+  }
+
+  .exercise-session .row-actions button {
+    width: 100%;
   }
 }

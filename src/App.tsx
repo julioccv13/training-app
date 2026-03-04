@@ -1489,6 +1489,47 @@ function App() {
                     </table>
                   </div>
 
+                  <div className="sets-mobile-list">
+                    {(draft?.sets ?? []).map((set, index) => (
+                      <article key={`mobile-${set.id}`} className="set-mobile-card">
+                        <div className="set-mobile-head">
+                          <strong>Set {index + 1}</strong>
+                          <button type="button" onClick={() => removeWorkoutSet(exercise.id, set.id)} aria-label={`Eliminar set ${index + 1}`}>
+                            -
+                          </button>
+                        </div>
+                        <div className="set-mobile-grid">
+                          <label>
+                            Reps
+                            <input
+                              type="number"
+                              min={0}
+                              value={set.reps}
+                              onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'reps', event.target.value)}
+                            />
+                          </label>
+                          <label>
+                            Peso
+                            <input
+                              type="number"
+                              min={0}
+                              value={set.weight}
+                              onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'weight', event.target.value)}
+                            />
+                          </label>
+                        </div>
+                        <label className="checkbox-row">
+                          <input
+                            type="checkbox"
+                            checked={set.done}
+                            onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'done', event.target.checked)}
+                          />
+                          <span>Set completado</span>
+                        </label>
+                      </article>
+                    ))}
+                  </div>
+
                   <div className="row-actions">
                     <button type="button" onClick={() => addWorkoutSet(exercise.id)}>
                       Agregar set

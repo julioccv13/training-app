@@ -6,6 +6,7 @@
 - Updated dashboard: removed weekly volume and switched recent history to grouped session summaries.
 - Improved dashboard readability for active-day chips.
 - Added decorative pixel-art icons (MIT) for top header, tabs, and active-day section.
+- Added responsive Track set entry: mobile uses card layout per set to prevent table overflow and device-dependent misalignment.
 
 ## 2026-03-04 (e1RM update)
 - Added dynamic e1RM estimation per exercise from routine logs using Brzycki equation.
