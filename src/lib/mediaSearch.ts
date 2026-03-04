@@ -1,6 +1,8 @@
 import { toSlug } from './helpers'
 import type { MediaType } from '../types/training'
 
+export type InternetMediaRelevanceTier = 'strict' | 'fallback' | 'broad'
+
 export interface InternetMediaResult {
   id: string
   title: string
@@ -11,6 +13,8 @@ export interface InternetMediaResult {
   license: string | null
   attribution: string | null
   tags: string[]
+  relevanceTier?: InternetMediaRelevanceTier
+  score?: number
 }
 
 const TRAINING_TERMS = [
@@ -35,10 +39,15 @@ const TRAINING_TERMS = [
   'resistance',
   'barbell',
   'dumbbell',
+  'shoulder press',
+  'overhead press',
+  'dumbbell press',
   'bench press',
   'deadlift',
   'squat',
   'pull up',
+  'pull-up',
+  'inverted row',
   'lat pulldown',
   'row',
   'hip thrust',
@@ -51,12 +60,13 @@ const TRAINING_TERMS = [
   'zancadas',
   'bulgarian',
   'bulgarian squat',
+  'bulgarian split squat',
+  'rear foot elevated split squat',
   'split squat',
   'zancada bulgara',
   'lunges',
   'lunge',
   'peso muerto',
-  'press',
   'biceps',
   'triceps',
   'hombro',
@@ -77,6 +87,47 @@ const TRAINING_TERMS = [
   'cardio',
 ]
 
+const NOISE_TERMS = [
+  'press conference',
+  'conference',
+  'premiere',
+  'red carpet',
+  'campaign',
+  'politics',
+  'speech',
+  'event in',
+  'cropped',
+  'portrait',
+  'expedition',
+  'nhq',
+  'los angeles',
+]
+
+const BASE_QUERY_SUFFIXES = ['exercise', 'workout', 'gym', 'strength training', 'ejercicio']
+
+const EXERCISE_ALIAS_MAP: Array<{ needle: string; aliases: string[] }> = [
+  {
+    needle: 'sentadilla bulgara',
+    aliases: ['bulgarian squat', 'bulgarian split squat', 'split squat', 'rear foot elevated split squat'],
+  },
+  {
+    needle: 'bulgarian squat',
+    aliases: ['sentadilla bulgara', 'bulgarian split squat', 'split squat'],
+  },
+  {
+    needle: 'australian pull up',
+    aliases: ['australian pull-up', 'inverted row', 'bodyweight row'],
+  },
+  {
+    needle: 'australian pull-up',
+    aliases: ['australian pull up', 'inverted row', 'bodyweight row'],
+  },
+  {
+    needle: 'arnold press',
+    aliases: ['dumbbell arnold press', 'shoulder dumbbell press', 'overhead dumbbell press'],
+  },
+]
+
 const normalizeText = (value: string): string =>
   value
     .normalize('NFD')
@@ -91,20 +142,74 @@ const tokenize = (value: string): string[] =>
 
 const uniqueStrings = (values: string[]): string[] => Array.from(new Set(values.filter(Boolean)))
 
-const buildSearchQueries = (query: string): string[] => {
-  const normalized = normalizeText(query)
-  const queries = [query.trim()]
+const hasTrainingTerm = (haystack: string): boolean =>
+  TRAINING_TERMS.some((term) => haystack.includes(normalizeText(term)))
 
-  const queryHasTrainingSignal = hasTrainingTerm(normalized)
-  if (!queryHasTrainingSignal) {
-    queries.push(`${query} exercise`, `${query} workout`, `${query} gym`)
+const hasNoiseTerm = (haystack: string): boolean =>
+  NOISE_TERMS.some((term) => haystack.includes(normalizeText(term)))
+
+type SearchIntent = {
+  normalizedQuery: string
+  queryTokens: string[]
+  aliasPhrases: string[]
+  aliasTokens: string[]
+  strictMinHits: number
+}
+
+const buildAliasPhrases = (normalizedQuery: string): string[] => {
+  const aliases = [normalizedQuery]
+
+  EXERCISE_ALIAS_MAP.forEach((entry) => {
+    if (normalizedQuery.includes(entry.needle) || entry.needle.includes(normalizedQuery)) {
+      aliases.push(entry.needle, ...entry.aliases)
+    }
+  })
+
+  return uniqueStrings(aliases.map(normalizeText).filter((value) => value.length >= 3))
+}
+
+const buildSearchIntent = (query: string): SearchIntent => {
+  const normalizedQuery = normalizeText(query)
+  const queryTokens = tokenize(normalizedQuery)
+  const aliasPhrases = buildAliasPhrases(normalizedQuery)
+  const aliasTokens = uniqueStrings(aliasPhrases.flatMap((phrase) => tokenize(phrase)))
+
+  return {
+    normalizedQuery,
+    queryTokens,
+    aliasPhrases,
+    aliasTokens,
+    strictMinHits: queryTokens.length >= 2 ? 2 : 1,
   }
+}
 
-  if (normalized.includes('bulgarian')) {
-    queries.push('bulgarian squat', 'split squat')
+const buildSearchQueries = (query: string, aliasPhrases: string[]): string[] => {
+  const trimmed = query.trim()
+  const queries = [trimmed]
+
+  BASE_QUERY_SUFFIXES.forEach((suffix) => {
+    queries.push(`${trimmed} ${suffix}`)
+  })
+
+  aliasPhrases.forEach((alias) => {
+    queries.push(alias)
+    BASE_QUERY_SUFFIXES.forEach((suffix) => {
+      queries.push(`${alias} ${suffix}`)
+    })
+  })
+
+  return uniqueStrings(queries).slice(0, 10)
+}
+
+const countTokenMatches = (haystack: string, tokens: string[]): number => {
+  if (tokens.length === 0) {
+    return 0
   }
+  return tokens.reduce((sum, token) => (haystack.includes(token) ? sum + 1 : sum), 0)
+}
 
-  return uniqueStrings(queries)
+const includesAnyPhrase = (haystack: string, phrases: string[]): boolean => {
+  return phrases.some((phrase) => phrase.length > 2 && haystack.includes(normalizeText(phrase)))
 }
 
 const buildHaystack = (item: InternetMediaResult): string =>
@@ -113,43 +218,66 @@ const buildHaystack = (item: InternetMediaResult): string =>
 const buildTagHaystack = (item: InternetMediaResult): string =>
   normalizeText(item.tags.join(' '))
 
-const countQueryTokenMatches = (haystack: string, query: string): number => {
-  const normalizedQuery = normalizeText(query)
-  const queryTokens = tokenize(query)
-
-  if (queryTokens.length === 0) {
-    return haystack.includes(normalizedQuery) ? 1 : 0
-  }
-
-  return queryTokens.reduce((sum, token) => (haystack.includes(token) ? sum + 1 : sum), 0)
+type RankedResult = {
+  item: InternetMediaResult
+  score: number
+  relevanceTier: InternetMediaRelevanceTier
 }
 
-const hasTrainingTerm = (haystack: string): boolean =>
-  TRAINING_TERMS.some((term) => haystack.includes(normalizeText(term)))
-
-const scoreResult = (item: InternetMediaResult, query: string): number => {
+const scoreResult = (item: InternetMediaResult, intent: SearchIntent): RankedResult | null => {
   const haystack = buildHaystack(item)
   const tagHaystack = buildTagHaystack(item)
-  const normalizedQuery = normalizeText(query)
-  const queryTokens = tokenize(query)
-
   const titleHaystack = normalizeText(item.title)
   const urlHaystack = normalizeText(item.url)
+  const semanticHaystack = `${titleHaystack} ${tagHaystack} ${urlHaystack}`
 
-  const titleHits = countQueryTokenMatches(titleHaystack, query)
-  const urlHits = countQueryTokenMatches(urlHaystack, query)
-  const tagHits = countQueryTokenMatches(tagHaystack, query)
-  const anyHits = countQueryTokenMatches(haystack, query)
+  const queryTitleHits = countTokenMatches(titleHaystack, intent.queryTokens)
+  const aliasTitleHits = countTokenMatches(titleHaystack, intent.aliasTokens)
+  const queryTagHits = countTokenMatches(tagHaystack, intent.queryTokens)
+  const aliasTagHits = countTokenMatches(tagHaystack, intent.aliasTokens)
+  const queryUrlHits = countTokenMatches(urlHaystack, intent.queryTokens)
+  const aliasUrlHits = countTokenMatches(urlHaystack, intent.aliasTokens)
 
-  if (anyHits === 0) {
-    return 0
+  const primaryHits = queryTitleHits + queryTagHits + queryUrlHits
+  const aliasHits = aliasTitleHits + aliasTagHits + aliasUrlHits
+  const semanticHits = Math.max(primaryHits, aliasHits)
+  if (semanticHits === 0) {
+    return null
   }
 
-  const exactTitleBonus = titleHaystack.includes(normalizedQuery) ? 4 : 0
-  const trainingBonus = hasTrainingTerm(`${haystack} ${tagHaystack}`) ? 3 : 0
-  const multiTokenBonus = queryTokens.length > 1 && titleHits > 1 ? 2 : 0
+  const phraseHit = includesAnyPhrase(`${titleHaystack} ${tagHaystack}`, intent.aliasPhrases)
+  const exactTitleBonus = titleHaystack.includes(intent.normalizedQuery) ? 5 : 0
+  const trainingSignal = hasTrainingTerm(`${haystack} ${tagHaystack}`)
+  const noiseSignal = hasNoiseTerm(semanticHaystack)
 
-  return titleHits * 5 + urlHits * 2 + tagHits + exactTitleBonus + trainingBonus + multiTokenBonus
+  const relevanceTier: InternetMediaRelevanceTier =
+    semanticHits >= intent.strictMinHits && trainingSignal && !noiseSignal
+      ? 'strict'
+      : semanticHits >= 1 && trainingSignal
+        ? 'fallback'
+        : 'broad'
+
+  const score =
+    queryTitleHits * 8 +
+    aliasTitleHits * 6 +
+    queryTagHits * 5 +
+    aliasTagHits * 4 +
+    queryUrlHits * 2 +
+    aliasUrlHits +
+    (phraseHit ? 6 : 0) +
+    exactTitleBonus +
+    (trainingSignal ? 6 : 0) -
+    (noiseSignal ? 9 : 0)
+
+  return {
+    item: {
+      ...item,
+      relevanceTier,
+      score,
+    },
+    score,
+    relevanceTier,
+  }
 }
 
 const fetchJson = async <T>(url: string): Promise<T> => {
@@ -281,7 +409,8 @@ export const searchInternetMedia = async (query: string): Promise<InternetMediaR
     return []
   }
 
-  const queries = buildSearchQueries(normalizedQuery)
+  const intent = buildSearchIntent(normalizedQuery)
+  const queries = buildSearchQueries(normalizedQuery, intent.aliasPhrases)
   const queryResults = await Promise.all(
     queries.map(async (candidate) => {
       const [openverseResults, wikimediaResults] = await Promise.all([
@@ -294,15 +423,14 @@ export const searchInternetMedia = async (query: string): Promise<InternetMediaR
 
   const uniqueResults = uniqueByUrl(queryResults.flat())
   const ranked = uniqueResults
-    .map((item) => {
-      return {
-        item,
-        score: scoreResult(item, normalizedQuery),
-      }
-    })
-    .filter((entry) => entry.score > 0)
+    .map((item) => scoreResult(item, intent))
+    .filter((entry): entry is RankedResult => Boolean(entry))
     .sort((a, b) => b.score - a.score || a.item.title.localeCompare(b.item.title))
-    .map((entry) => entry.item)
 
-  return ranked.slice(0, 30)
+  const strict = ranked.filter((entry) => entry.relevanceTier === 'strict')
+  const fallback = ranked.filter((entry) => entry.relevanceTier === 'fallback')
+  const broad = ranked.filter((entry) => entry.relevanceTier === 'broad')
+
+  const stagedResults = strict.length > 0 ? strict : fallback.length > 0 ? fallback : broad
+  return stagedResults.slice(0, 30).map((entry) => entry.item)
 }

@@ -192,6 +192,7 @@ function App() {
   const [internetResults, setInternetResults] = useState<InternetMediaResult[]>([])
   const [internetLoading, setInternetLoading] = useState(false)
   const [internetError, setInternetError] = useState('')
+  const [internetNotice, setInternetNotice] = useState('')
 
   useEffect(() => {
     saveJson(STORAGE_KEYS.routine, routineBundle)
@@ -825,12 +826,23 @@ function App() {
 
     setInternetLoading(true)
     setInternetError('')
+    setInternetNotice('')
 
     try {
       const results = await searchInternetMedia(query)
       setInternetResults(results)
       if (results.length === 0) {
         setInternetError('No se encontraron resultados externos para esa busqueda.')
+        return
+      }
+
+      const hasBroadResults = results.some((result) => result.relevanceTier === 'broad')
+      const hasFallbackResults = results.some((result) => result.relevanceTier === 'fallback')
+
+      if (hasBroadResults) {
+        setInternetNotice('No hubo coincidencias de entrenamiento suficientes; se muestran resultados amplios.')
+      } else if (hasFallbackResults) {
+        setInternetNotice('Mostrando resultados de fallback por falta de coincidencias estrictas.')
       }
     } catch {
       setInternetError('No fue posible consultar fuentes externas en este momento.')
@@ -843,6 +855,7 @@ function App() {
     setInternetQuery('')
     setInternetResults([])
     setInternetError('')
+    setInternetNotice('')
   }
 
   const addExternalMediaToLibrary = (result: InternetMediaResult): void => {
@@ -1603,6 +1616,7 @@ function App() {
                 </button>
               </div>
               {internetError && <p className="hint">{internetError}</p>}
+              {internetNotice && <p className="hint">{internetNotice}</p>}
               <p className="hint">
                 Los resultados externos se guardan como URL en la biblioteca. Para dejarlos permanentes en el repo, usa pin manual desde codigo.
               </p>
