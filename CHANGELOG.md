@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-03-04 (search and dashboard polish)
+- Reworked internet media search ranking to be query-driven with dynamic expansion (not strict tag-only filtering).
+- Improved handling for terms like `bulgarian` by adding query expansion (`bulgarian squat`, `split squat`).
+- Updated dashboard: removed weekly volume and switched recent history to grouped session summaries.
+- Improved dashboard readability for active-day chips.
+- Added decorative pixel-art icons (MIT) for top header, tabs, and active-day section.
+
 ## 2026-03-04 (e1RM update)
 - Added dynamic e1RM estimation per exercise from routine logs using Brzycki equation.
 - Added robust e1RM aggregation (median of recent valid sets, 1-10 reps, minimum 3 samples).

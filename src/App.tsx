@@ -70,12 +70,12 @@ type ImportPayload = {
   exportedAt?: string
 }
 
-const tabs: Array<{ key: TabKey; label: string }> = [
-  { key: 'dashboard', label: 'Inicio' },
-  { key: 'routines', label: 'Rutinas' },
-  { key: 'workout', label: 'Track' },
-  { key: 'media', label: 'Media' },
-  { key: 'settings', label: 'Ajustes' },
+const tabs: Array<{ key: TabKey; label: string; iconPath: string }> = [
+  { key: 'dashboard', label: 'Inicio', iconPath: 'icons/pixel/home.svg' },
+  { key: 'routines', label: 'Rutinas', iconPath: 'icons/pixel/clipboard.svg' },
+  { key: 'workout', label: 'Track', iconPath: 'icons/pixel/chart.svg' },
+  { key: 'media', label: 'Media', iconPath: 'icons/pixel/image.svg' },
+  { key: 'settings', label: 'Ajustes', iconPath: 'icons/pixel/settings-cog.svg' },
 ]
 
 const MIN_E1RM_SAMPLES = 3
@@ -138,6 +138,8 @@ const resolveMediaPath = (path: string | null): string | null => {
   }
   return `${import.meta.env.BASE_URL}${path}`
 }
+
+const resolveStaticPath = (path: string): string => `${import.meta.env.BASE_URL}${path}`
 
 const buildInitialState = (): {
   routineBundle: RoutineBundle
@@ -1033,7 +1035,10 @@ function App() {
       <header className="topbar">
         <div>
           <h1>Training App</h1>
-          <p>Rutinas multiples por dispositivo, tracking por dia y media hub desacoplado.</p>
+          <p className="topbar-tagline">
+            <img src={resolveStaticPath('icons/pixel/home.svg')} alt="" aria-hidden="true" />
+            Entrena con foco cada dia.
+          </p>
         </div>
         <span className="badge">{settings.units.toUpperCase()}</span>
       </header>
@@ -1046,7 +1051,8 @@ function App() {
             className={tab.key === activeTab ? 'tab active' : 'tab'}
             onClick={() => setActiveTab(tab.key)}
           >
-            {tab.label}
+            <img src={resolveStaticPath(tab.iconPath)} alt="" aria-hidden="true" className="tab-icon" />
+            <span>{tab.label}</span>
           </button>
         ))}
       </nav>
@@ -1084,7 +1090,10 @@ function App() {
             </article>
 
             <article className="panel full">
-              <h2>Dias de la rutina activa</h2>
+              <h2 className="heading-with-icon">
+                <img src={resolveStaticPath('icons/pixel/calendar.svg')} alt="" aria-hidden="true" />
+                Dias de la rutina activa
+              </h2>
               <div className="day-overview">
                 {dayStats.map((day) => (
                   <button

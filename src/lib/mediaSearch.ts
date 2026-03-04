@@ -89,10 +89,29 @@ const tokenize = (value: string): string[] =>
     .split(/[^a-z0-9]+/)
     .filter((token) => token.length >= 3)
 
+const uniqueStrings = (values: string[]): string[] => Array.from(new Set(values.filter(Boolean)))
+
+const buildSearchQueries = (query: string): string[] => {
+  const normalized = normalizeText(query)
+  const queries = [query.trim()]
+
+  const queryHasTrainingSignal = hasTrainingTerm(normalized)
+  if (!queryHasTrainingSignal) {
+    queries.push(`${query} exercise`, `${query} workout`, `${query} gym`)
+  }
+
+  if (normalized.includes('bulgarian')) {
+    queries.push('bulgarian squat', 'split squat')
+  }
+
+  return uniqueStrings(queries)
+}
+
 const buildHaystack = (item: InternetMediaResult): string =>
-  normalizeText(
-    [item.title, item.provider, item.url, item.attribution ?? '', item.license ?? '', item.tags.join(' ')].join(' '),
-  )
+  normalizeText([item.title, item.provider, item.url, item.attribution ?? '', item.license ?? ''].join(' '))
+
+const buildTagHaystack = (item: InternetMediaResult): string =>
+  normalizeText(item.tags.join(' '))
 
 const countQueryTokenMatches = (haystack: string, query: string): number => {
   const normalizedQuery = normalizeText(query)
@@ -108,13 +127,29 @@ const countQueryTokenMatches = (haystack: string, query: string): number => {
 const hasTrainingTerm = (haystack: string): boolean =>
   TRAINING_TERMS.some((term) => haystack.includes(normalizeText(term)))
 
-const isTrainingRelated = (item: InternetMediaResult, query: string): boolean => {
+const scoreResult = (item: InternetMediaResult, query: string): number => {
   const haystack = buildHaystack(item)
-  if (!hasTrainingTerm(haystack)) {
-    return false
+  const tagHaystack = buildTagHaystack(item)
+  const normalizedQuery = normalizeText(query)
+  const queryTokens = tokenize(query)
+
+  const titleHaystack = normalizeText(item.title)
+  const urlHaystack = normalizeText(item.url)
+
+  const titleHits = countQueryTokenMatches(titleHaystack, query)
+  const urlHits = countQueryTokenMatches(urlHaystack, query)
+  const tagHits = countQueryTokenMatches(tagHaystack, query)
+  const anyHits = countQueryTokenMatches(haystack, query)
+
+  if (anyHits === 0) {
+    return 0
   }
 
-  return countQueryTokenMatches(haystack, query) > 0
+  const exactTitleBonus = titleHaystack.includes(normalizedQuery) ? 4 : 0
+  const trainingBonus = hasTrainingTerm(`${haystack} ${tagHaystack}`) ? 3 : 0
+  const multiTokenBonus = queryTokens.length > 1 && titleHits > 1 ? 2 : 0
+
+  return titleHits * 5 + urlHits * 2 + tagHits + exactTitleBonus + trainingBonus + multiTokenBonus
 }
 
 const fetchJson = async <T>(url: string): Promise<T> => {
@@ -246,33 +281,28 @@ export const searchInternetMedia = async (query: string): Promise<InternetMediaR
     return []
   }
 
-  const [openverseResults, wikimediaResults] = await Promise.all([
-    searchOpenverse(normalizedQuery),
-    searchWikimedia(normalizedQuery),
-  ])
+  const queries = buildSearchQueries(normalizedQuery)
+  const queryResults = await Promise.all(
+    queries.map(async (candidate) => {
+      const [openverseResults, wikimediaResults] = await Promise.all([
+        searchOpenverse(candidate),
+        searchWikimedia(candidate),
+      ])
+      return openverseResults.concat(wikimediaResults)
+    }),
+  )
 
-  const uniqueResults = uniqueByUrl(openverseResults.concat(wikimediaResults))
-  const strict = uniqueResults.filter((item) => isTrainingRelated(item, normalizedQuery))
-
-  if (strict.length > 0) {
-    return strict.slice(0, 30)
-  }
-
-  const fallback = uniqueResults
+  const uniqueResults = uniqueByUrl(queryResults.flat())
+  const ranked = uniqueResults
     .map((item) => {
-      const haystack = buildHaystack(item)
-      const tokenMatches = countQueryTokenMatches(haystack, normalizedQuery)
-      const exactQueryBonus = haystack.includes(normalizeText(normalizedQuery)) ? 2 : 0
-      const trainingBonus = hasTrainingTerm(haystack) ? 1 : 0
-
       return {
         item,
-        score: tokenMatches + exactQueryBonus + trainingBonus,
+        score: scoreResult(item, normalizedQuery),
       }
     })
     .filter((entry) => entry.score > 0)
     .sort((a, b) => b.score - a.score || a.item.title.localeCompare(b.item.title))
     .map((entry) => entry.item)
 
-  return fallback.slice(0, 30)
+  return ranked.slice(0, 30)
 }

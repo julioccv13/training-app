@@ -52,6 +52,20 @@
   font-size: 0.93rem;
 }
 
+.topbar-tagline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.topbar-tagline img {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+  filter: brightness(0) saturate(100%) invert(89%) sepia(24%) saturate(141%) hue-rotate(164deg) brightness(101%)
+    contrast(91%);
+}
+
 .badge {
   background: rgba(49, 166, 115, 0.2);
   color: #8af8cb;
@@ -78,12 +92,29 @@
   font-size: 0.8rem;
   padding: 0.6rem 0.35rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.tab-icon {
+  width: 14px;
+  height: 14px;
+  image-rendering: pixelated;
+  filter: brightness(0) saturate(100%) invert(20%) sepia(21%) saturate(547%) hue-rotate(163deg) brightness(91%)
+    contrast(86%);
 }
 
 .tab.active {
   border-color: #1f3a4f;
   background: linear-gradient(135deg, #1d3142 0%, #27465c 100%);
   color: #f7f9fb;
+}
+
+.tab.active .tab-icon {
+  filter: brightness(0) saturate(100%) invert(98%) sepia(9%) saturate(129%) hue-rotate(166deg) brightness(115%)
+    contrast(95%);
 }
 
 .content {
@@ -109,6 +140,20 @@
   text-transform: uppercase;
   letter-spacing: 0.03em;
   font-size: 1rem;
+}
+
+.heading-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.heading-with-icon img {
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+  filter: brightness(0) saturate(100%) invert(18%) sepia(22%) saturate(838%) hue-rotate(164deg) brightness(98%)
+    contrast(89%);
 }
 
 .panel h3 {
