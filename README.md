@@ -5,7 +5,7 @@ PWA mobile-first para iPhone (Safari + Add to Home Screen) con rutinas multiples
 ## Objetivo
 - Permitir varias rutinas en un mismo dispositivo.
 - Recordar la rutina activa del dispositivo y pedir confirmacion antes de cambiarla.
-- Registrar sets/reps/peso/RPE/descanso/notas por rutina y por dia.
+- Registrar sets/reps/peso/RPE/notas por rutina y por dia.
 - Mantener media local y externa para consulta rapida.
 
 ## Stack

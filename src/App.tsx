@@ -607,9 +607,7 @@ function App() {
         return
       }
 
-      const relevantSets = draft.sets.filter(
-        (set) => set.done || set.reps > 0 || set.weight > 0 || set.rpe > 0 || set.restSeconds > 0,
-      )
+      const relevantSets = draft.sets.filter((set) => set.done || set.reps > 0 || set.weight > 0 || set.rpe > 0)
 
       if (relevantSets.length === 0 && !draft.notes.trim()) {
         return
@@ -1141,17 +1139,6 @@ function App() {
                           }
                         />
                       </label>
-                      <label>
-                        Descanso (seg)
-                        <input
-                          type="number"
-                          min={0}
-                          value={exercise.restSeconds}
-                          onChange={(event) =>
-                            updateExercise(exercise.id, { restSeconds: Math.max(0, Number(event.target.value) || 0) })
-                          }
-                        />
-                      </label>
                     </div>
 
                     <label>
@@ -1219,7 +1206,6 @@ function App() {
                           <th>Reps</th>
                           <th>Peso</th>
                           <th>RPE</th>
-                          <th>Descanso</th>
                           <th>OK</th>
                           <th></th>
                         </tr>
@@ -1251,16 +1237,6 @@ function App() {
                                 max={10}
                                 value={set.rpe}
                                 onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'rpe', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="number"
-                                min={0}
-                                value={set.restSeconds}
-                                onChange={(event) =>
-                                  updateWorkoutSet(exercise.id, set.id, 'restSeconds', event.target.value)
-                                }
                               />
                             </td>
                             <td>
