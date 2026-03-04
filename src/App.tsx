@@ -826,6 +826,12 @@ function App() {
     }
   }
 
+  const clearInternetSearch = (): void => {
+    setInternetQuery('')
+    setInternetResults([])
+    setInternetError('')
+  }
+
   const addExternalMediaToLibrary = (result: InternetMediaResult): void => {
     setMedia((current) => {
       const exists = current.some((item) => item.externalUrl === result.url)
@@ -1488,16 +1494,31 @@ function App() {
                 <button type="button" onClick={searchInternet} disabled={internetLoading}>
                   {internetLoading ? 'Buscando...' : 'Buscar'}
                 </button>
+                <button
+                  type="button"
+                  onClick={clearInternetSearch}
+                  disabled={internetLoading}
+                >
+                  Cerrar busqueda
+                </button>
               </div>
               {internetError && <p className="hint">{internetError}</p>}
               <p className="hint">
                 Los resultados externos se guardan como URL en la biblioteca. Para dejarlos permanentes en el repo, usa pin manual desde codigo.
               </p>
+              <p className="hint">La busqueda externa aplica filtro para contenido relacionado con entrenamiento.</p>
             </article>
 
             {internetResults.length > 0 && (
               <article className="panel full">
-                <h2>Resultados internet</h2>
+                <div className="exercise-head">
+                  <h2>Resultados internet</h2>
+                  <div className="row-actions">
+                    <button type="button" onClick={clearInternetSearch}>
+                      Cerrar resultados
+                    </button>
+                  </div>
+                </div>
                 <div className="media-results-grid">
                   {internetResults.map((result) => (
                     <div key={`${result.provider}-${result.id}`} className="media-result-card">

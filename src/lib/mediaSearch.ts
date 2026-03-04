@@ -13,6 +13,92 @@ export interface InternetMediaResult {
   tags: string[]
 }
 
+const TRAINING_TERMS = [
+  'entrenamiento',
+  'ejercicio',
+  'ejercicios',
+  'rutina',
+  'gimnasio',
+  'pesas',
+  'musculacion',
+  'hipertrofia',
+  'fuerza',
+  'fitness',
+  'workout',
+  'exercise',
+  'training',
+  'gym',
+  'strength',
+  'bodybuilding',
+  'powerlifting',
+  'weightlifting',
+  'resistance',
+  'barbell',
+  'dumbbell',
+  'bench press',
+  'deadlift',
+  'squat',
+  'pull up',
+  'lat pulldown',
+  'row',
+  'hip thrust',
+  'face pull',
+  'remo',
+  'jalon',
+  'dominadas',
+  'sentadilla',
+  'peso muerto',
+  'press',
+  'biceps',
+  'triceps',
+  'hombro',
+  'hombros',
+  'pecho',
+  'espalda',
+  'dorsales',
+  'trapecios',
+  'deltoides',
+  'romboides',
+  'cuadriceps',
+  'isquios',
+  'isquiotibiales',
+  'gluteos',
+  'aductores',
+  'gemelos',
+  'tibiales',
+  'cardio',
+]
+
+const normalizeText = (value: string): string =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+
+const tokenize = (value: string): string[] =>
+  normalizeText(value)
+    .split(/[^a-z0-9]+/)
+    .filter((token) => token.length >= 3)
+
+const isTrainingRelated = (item: InternetMediaResult, query: string): boolean => {
+  const haystack = normalizeText(
+    [item.title, item.provider, item.url, item.attribution ?? '', item.license ?? '', item.tags.join(' ')].join(' '),
+  )
+
+  const hasTrainingTerm = TRAINING_TERMS.some((term) => haystack.includes(normalizeText(term)))
+  if (!hasTrainingTerm) {
+    return false
+  }
+
+  const queryTokens = tokenize(query)
+  if (queryTokens.length === 0) {
+    return true
+  }
+
+  return queryTokens.some((token) => haystack.includes(token))
+}
+
 const fetchJson = async <T>(url: string): Promise<T> => {
   const response = await fetch(url)
   if (!response.ok) {
@@ -147,5 +233,9 @@ export const searchInternetMedia = async (query: string): Promise<InternetMediaR
     searchWikimedia(normalizedQuery),
   ])
 
-  return uniqueByUrl(openverseResults.concat(wikimediaResults)).slice(0, 30)
+  const filtered = uniqueByUrl(openverseResults.concat(wikimediaResults)).filter((item) =>
+    isTrainingRelated(item, normalizedQuery),
+  )
+
+  return filtered.slice(0, 30)
 }
