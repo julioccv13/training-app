@@ -1,6 +1,15 @@
 # Changelog
 
 ## 2026-03-04
+- Added multi-routine architecture (`routines/days/exercises`) with migration support.
+- Added device-level active routine persistence and confirmation lock on routine switch.
+- Simplified tracking flow to routine -> day -> sets logging.
+- Decoupled media from workout tracking screens.
+- Added media local search filters and internet search integration (Openverse + Wikimedia).
+- Added external media save-by-URL flow for reusable library references.
+- Updated docs, AGENTS, CLAUDE, and operations guidance for code-driven and in-app routine updates.
+
+## 2026-03-04 (earlier)
 - Synced project media with renamed English video files from docs source.
 - Added media roles (`single`, `multi`, `reference`) and multi-exercise associations (`exerciseIds[]`).
 - Implemented migration support for old media records with `exerciseId`.

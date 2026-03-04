@@ -5,30 +5,35 @@
 - Repo: `julioccv13/training-app`
 
 ## Project goal
-Mobile-first PWA for iPhone browser usage with:
-- 4-day editable training routine
-- Local workout logging (sets/reps/weight/RPE/rest/notes)
-- Media catalog (images/videos) from `~/workspace/personal/docs/training app`
-- Media roles: `single`, `multi`, `reference` with multi-exercise associations
+PWA de entrenamiento para iPhone con:
+- Rutinas multiples seleccionables en dispositivo
+- Confirmacion al cambiar rutina activa (device lock)
+- Tracking por rutina y por dia
+- Biblioteca media desacoplada del tracking
+- Busqueda local + busqueda internet de media (URLs externas)
 
 ## Paths
 - Repo root: `~/workspace/personal/training app`
-- Source docs/media: `~/workspace/personal/docs/training app/media`
+- Docs/media source: `~/workspace/personal/docs/training app/media`
 - Task logs: `~/workspace/personal/docs/training app/tasks`
 
 ## Rules
-- Git provider: GitHub only (`gh`, SSH only)
-- Do not change or create branches unless Julio explicitly asks
-- Commit messages: short and simple English
-- Keep no secrets or personal sensitive data in repo
+- GitHub only (`gh`) using SSH
+- No branch changes unless explicitly requested
+- Short, simple commit messages in English
+- No secrets in repository
+
+## Maintenance
+- Add routines from code in `src/data/seedRoutine.ts`
+- Edit/create routines from app tab `Rutinas`
+- Media local sync + catalog generation via `scripts/generate_media_catalog.py`
 
 ## Deploy
-- Target: GitHub Pages
-- Build: `npm run build`
-- Publish: `.github/workflows/deploy-pages.yml`
+- GitHub Pages via `.github/workflows/deploy-pages.yml`
 
 ## Validation checklist
 - `npm run lint`
 - `npm run build`
-- Smoke test in iPhone Safari or responsive browser
-- Verify single/multi video behavior in workout screen
+- Verify routine lock confirmation on routine switch
+- Verify logs are partitioned by routine
+- Verify media internet search and save URL flow

@@ -1,41 +1,37 @@
 # Media Organization
 
-## Source
-`~/workspace/personal/docs/training app`
-
-## Applied structure
+## Local source
 `~/workspace/personal/docs/training app/media`
-- `images/reference/`
-- `videos/exercises/`
-- `videos/archive/duplicates/`
-- `videos/raw/`
-- `media_manifest.json`
 
-## Rules applied
-- Se movieron originales WhatsApp a rutas normalizadas.
-- Videos renombrados en ingles con prefijo numerico + slug descriptivo.
-- Duplicados exactos detectados por SHA-256 se movieron a `archive/duplicates`.
-- Se mantuvo trazabilidad en `media_manifest.json`.
-- El catalogo de app se genera automaticamente con:
-  - `role=single|multi|reference`
-  - mapeo inicial de `exerciseSlugs` para asociaciones sugeridas
+## Project publish path
+`~/workspace/personal/training app/public/media`
 
-## Current inventory
-- 8 imagenes de referencia
-- 33 videos totales
-- 28 videos unicos
-- 5 duplicados exactos
-
-## Project publish copy
-Para despliegue, la app usa copia de esta estructura en:
-- `~/workspace/personal/training app/public/media`
-
-## Catalog generation
-Desde el repo:
+## Local media update
+1. Actualiza archivos en `docs/.../media`.
+2. Sincroniza al proyecto:
+```bash
+rsync -a --delete '~/workspace/personal/docs/training app/media/' 'public/media/'
+```
+3. Regenera catalogo:
 ```bash
 python3 scripts/generate_media_catalog.py
 ```
+4. Valida y publica.
 
-Esto actualiza:
-- `src/data/mediaCatalog.ts`
-- `~/workspace/personal/docs/training app/media/media_manifest.json`
+## Media model in app
+- `origin=local`: archivos versionados en repo.
+- `origin=external`: recursos guardados por URL desde internet.
+- `role=single|multi|reference`: clasificacion para consulta.
+
+## Internet search
+- Proveedores actuales:
+  - Openverse
+  - Wikimedia Commons
+- Se guarda URL, thumbnail, licencia y atribucion cuando existe.
+
+## Pin manual to repo
+Para dejar un recurso externo permanente:
+1. Descargarlo manualmente con licencias permitidas.
+2. Guardarlo en `public/media/`.
+3. Actualizar catalogo/metadata.
+4. Commit + deploy.

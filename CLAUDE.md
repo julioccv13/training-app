@@ -1,31 +1,30 @@
 # CLAUDE.md — training-app
 
 ## Context
-Personal training app built as a PWA for iPhone Safari with offline-friendly local storage.
+Personal training PWA with multi-routine tracking and device-level active-routine lock.
 
 ## Tech stack
 - React + Vite + TypeScript
 - PWA: `vite-plugin-pwa`
-- Storage: `localStorage` only (no backend)
+- Storage: `localStorage`
 
-## Key folders
-- `src/types/`: app contracts and entities
-- `src/data/`: seed routine and media catalog
-- `src/lib/`: storage and helper utilities
-- `scripts/`: automation scripts (media catalog generation)
-- `public/media/`: images/videos served by GitHub Pages
-- `docs/`: architecture, media policy, operations
+## Domain model
+- `Routine`, `RoutineDay`, `RoutineExercise`
+- `WorkoutLog` partitioned by `routineId`
+- `MediaItem` with `origin=local|external`
+- `AppSettings` includes `selectedRoutineId` and lock settings
+
+## Key files
+- `src/data/seedRoutine.ts`: seeds + migrations + normalization
+- `src/lib/mediaSearch.ts`: Openverse/Wikimedia search
+- `src/App.tsx`: routines, tracking, media UI
+- `src/types/training.ts`: contracts
 
 ## Product behavior
-- Editable 4-day routine (days + exercises CRUD)
-- Workout logs stored on-device
-- Exercise media assignment and playback (single/multi/reference roles)
-- One media can be linked to multiple exercises (`exerciseIds[]`)
-- Backup export/import in JSON
-
-## Deploy notes
-- Vite base path is `/training-app/` (GitHub Pages)
-- Workflow: `.github/workflows/deploy-pages.yml`
+- Device remembers selected routine
+- Routine switch requests confirmation when lock is enabled
+- Tracking flow is routine -> day -> sets
+- Media is query-only support (not coupled to workout steps)
 
 ## Commands
 ```bash
@@ -36,7 +35,8 @@ npm run build
 ```
 
 ## Testing focus
-- CRUD day/exercise
-- workout session save/reload
-- media assignment and video playback (single prioritized, multi as related library)
-- backup export/import
+- routine switch confirmation behavior
+- routine/day CRUD and tracking integrity
+- logs separation by routine
+- media local search
+- internet media search + save URL into library

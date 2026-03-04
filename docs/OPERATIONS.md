@@ -15,32 +15,40 @@ npm run build
 ## Deploy
 Push a `main` dispara `.github/workflows/deploy-pages.yml`.
 
-## Post-deploy check
-- URL carga sin 404 en assets
-- Navegacion tabs funciona
-- Guardado local persiste al recargar
-- Video de ejercicio reproduce
-- Add to Home Screen disponible en iPhone Safari
+## Post-deploy checks
+- App carga sin 404.
+- Selector de rutina funciona.
+- Cambio de rutina pide confirmacion (si lock activo).
+- Tracking guarda logs en rutina activa.
+- Media local y externa se visualiza.
 
-## Updating media
-1. Actualizar carpeta fuente en `~/workspace/personal/docs/training app/media`.
-2. Copiar a proyecto:
+## Add routine from code
+Archivo: `src/data/seedRoutine.ts`
+
+- Agregar rutina en `seedRoutineBundle.routines`.
+- Agregar dias en `seedRoutineBundle.days` con `routineId`.
+- Agregar ejercicios en `seedRoutineBundle.exercises` con `routineId` y `dayId`.
+
+Luego:
 ```bash
-rsync -a --delete '~/workspace/personal/docs/training app/media/' 'public/media/'
+npm run lint
+npm run build
 ```
-3. Regenerar catalogo + manifiesto:
-```bash
-python3 scripts/generate_media_catalog.py
-```
-4. Ejecutar lint/build y publicar.
 
-## Policy for multi-exercise videos
-- No se eliminan.
-- Se marcan como `multi`.
-- Se pueden asociar a varios ejercicios.
-- En entrenamiento, los `single` tienen prioridad como guia principal.
+## Modify routine from app
+Pestaña `Rutinas`:
+- Seleccionar rutina activa (con confirmacion por lock).
+- Editar nombre/descripcion de rutina activa.
+- Crear rutina desde cero.
+- Agregar/editar/eliminar dias.
+- Agregar/editar/eliminar ejercicios.
 
-## Backup policy
-Antes de cambios grandes de rutina:
-- Exportar backup JSON desde la app.
-- Guardar copia local con fecha.
+## Media update
+- Local: sync + regenerate catalog.
+- External: buscar en `Media`, guardar URL en biblioteca.
+
+## Backup
+Pestaña `Ajustes`:
+- Exportar JSON
+- Importar JSON
+- Reset total

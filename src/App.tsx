@@ -1,85 +1,115 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import './App.css'
-import { normalizeMediaState, routineWithMedia, seedMedia, seedSettings, STORAGE_KEYS } from './data/seedRoutine'
-import { calcWeeklyVolume, createId, emptyWorkoutSet, sortExercises, toSlug, toTitle } from './lib/helpers'
+import {
+  normalizeLogsState,
+  normalizeMediaState,
+  normalizeRoutineBundleState,
+  normalizeSettingsState,
+  seedMedia,
+  seedRoutineBundle,
+  seedSettings,
+  STORAGE_KEYS,
+} from './data/seedRoutine'
+import { calcWeeklyVolume, createId, emptyWorkoutSet, sortDays, sortExercises, toSlug, toTitle } from './lib/helpers'
+import { searchInternetMedia, type InternetMediaResult } from './lib/mediaSearch'
 import { downloadJson, loadJson, readJsonFile, saveJson } from './lib/storage'
-import type { AppSettings, Exercise, MediaItem, MediaRole, RoutineState, WorkoutLog, WorkoutSet } from './types/training'
+import type {
+  AppSettings,
+  MediaItem,
+  MediaRole,
+  MediaType,
+  Routine,
+  RoutineBundle,
+  RoutineDay,
+  RoutineExercise,
+  WorkoutLog,
+  WorkoutSet,
+} from './types/training'
 
-type TabKey = 'dashboard' | 'routine' | 'workout' | 'media' | 'settings'
-type MediaFilter = 'all' | 'single' | 'multi' | 'reference' | 'unassigned'
-
+type TabKey = 'dashboard' | 'routines' | 'workout' | 'media' | 'settings'
 type WorkoutDraft = Record<string, { sets: WorkoutSet[]; notes: string }>
+type MediaTypeFilter = 'all' | MediaType
+type MediaOriginFilter = 'all' | 'local' | 'external'
 
-const tabs: { key: TabKey; label: string }[] = [
+type ImportPayload = {
+  routineBundle?: unknown
+  media?: unknown
+  logs?: unknown
+  settings?: unknown
+  exportedAt?: string
+}
+
+const tabs: Array<{ key: TabKey; label: string }> = [
   { key: 'dashboard', label: 'Inicio' },
-  { key: 'routine', label: 'Rutina' },
-  { key: 'workout', label: 'Entrenar' },
+  { key: 'routines', label: 'Rutinas' },
+  { key: 'workout', label: 'Track' },
   { key: 'media', label: 'Media' },
   { key: 'settings', label: 'Ajustes' },
 ]
 
-const resolveMediaPath = (path: string): string => `${import.meta.env.BASE_URL}${path}`
-
-const roleLabel = (role: MediaRole): string => {
-  if (role === 'single') {
-    return 'Single'
+const resolveMediaPath = (path: string | null): string | null => {
+  if (!path) {
+    return null
   }
-  if (role === 'multi') {
-    return 'Multi'
-  }
-  return 'Reference'
+  return `${import.meta.env.BASE_URL}${path}`
 }
 
-const buildRoutineWithMedia = (routine: RoutineState, media: MediaItem[]): RoutineState => {
-  const map = media.reduce<Record<string, string[]>>((acc, item) => {
-    item.exerciseIds.forEach((exerciseId) => {
-      if (!acc[exerciseId]) {
-        acc[exerciseId] = []
-      }
-      acc[exerciseId].push(item.id)
-    })
-    return acc
-  }, {})
+const buildInitialState = (): {
+  routineBundle: RoutineBundle
+  media: MediaItem[]
+  logs: WorkoutLog[]
+  settings: AppSettings
+} => {
+  const rawRoutine = loadJson<unknown>(STORAGE_KEYS.routine, seedRoutineBundle)
+  const routineBundle = normalizeRoutineBundleState(rawRoutine)
 
-  return {
-    ...routine,
-    exercises: routine.exercises.map((exercise) => ({
-      ...exercise,
-      mediaIds: map[exercise.id] ?? [],
-    })),
-  }
-}
+  const rawMedia = loadJson<unknown>(STORAGE_KEYS.media, seedMedia)
+  const media = normalizeMediaState(rawMedia)
 
-const initialRoutine = loadJson<RoutineState>(STORAGE_KEYS.routine, routineWithMedia)
-const initialMediaRaw = loadJson<unknown>(STORAGE_KEYS.media, seedMedia)
-const initialMedia = normalizeMediaState(initialMediaRaw)
-const initialLogs = loadJson<WorkoutLog[]>(STORAGE_KEYS.logs, [])
-const loadedSettings = loadJson<AppSettings>(STORAGE_KEYS.settings, seedSettings)
-const initialSettings: AppSettings = {
-  ...seedSettings,
-  ...loadedSettings,
-  schemaVersion: seedSettings.schemaVersion,
+  const rawLogs = loadJson<unknown>(STORAGE_KEYS.logs, [])
+  const logs = normalizeLogsState(rawLogs, routineBundle)
+
+  const rawSettings = loadJson<unknown>(STORAGE_KEYS.settings, seedSettings)
+  const settings = normalizeSettingsState(rawSettings, routineBundle)
+
+  return { routineBundle, media, logs, settings }
 }
 
 function App() {
+  const initialState = useMemo(buildInitialState, [])
+
   const [activeTab, setActiveTab] = useState<TabKey>('dashboard')
-  const [routine, setRoutine] = useState<RoutineState>(() => buildRoutineWithMedia(initialRoutine, initialMedia))
-  const [media, setMedia] = useState<MediaItem[]>(initialMedia)
-  const [logs, setLogs] = useState<WorkoutLog[]>(initialLogs)
-  const [settings, setSettings] = useState<AppSettings>(initialSettings)
-  const [selectedDayId, setSelectedDayId] = useState<string>(() => routine.days[0]?.id ?? '')
+  const [routineBundle, setRoutineBundle] = useState<RoutineBundle>(initialState.routineBundle)
+  const [media, setMedia] = useState<MediaItem[]>(initialState.media)
+  const [logs, setLogs] = useState<WorkoutLog[]>(initialState.logs)
+  const [settings, setSettings] = useState<AppSettings>(initialState.settings)
+
+  const [routineEditorDayId, setRoutineEditorDayId] = useState<string>('')
+  const [trackDayId, setTrackDayId] = useState<string>('')
+
+  const [newRoutineName, setNewRoutineName] = useState('')
+  const [newRoutineDescription, setNewRoutineDescription] = useState('')
   const [newDayName, setNewDayName] = useState('')
   const [newDayFocus, setNewDayFocus] = useState('')
   const [newExerciseName, setNewExerciseName] = useState('')
   const [newExerciseGroup, setNewExerciseGroup] = useState('')
+
   const [workoutDraft, setWorkoutDraft] = useState<WorkoutDraft>({})
-  const [workoutMessage, setWorkoutMessage] = useState('')
-  const [mediaFilter, setMediaFilter] = useState<MediaFilter>('all')
+  const [uiMessage, setUiMessage] = useState('')
+
+  const [mediaSearchTerm, setMediaSearchTerm] = useState('')
+  const [mediaTypeFilter, setMediaTypeFilter] = useState<MediaTypeFilter>('all')
+  const [mediaOriginFilter, setMediaOriginFilter] = useState<MediaOriginFilter>('all')
+
+  const [internetQuery, setInternetQuery] = useState('')
+  const [internetResults, setInternetResults] = useState<InternetMediaResult[]>([])
+  const [internetLoading, setInternetLoading] = useState(false)
+  const [internetError, setInternetError] = useState('')
 
   useEffect(() => {
-    saveJson(STORAGE_KEYS.routine, routine)
-  }, [routine])
+    saveJson(STORAGE_KEYS.routine, routineBundle)
+  }, [routineBundle])
 
   useEffect(() => {
     saveJson(STORAGE_KEYS.media, media)
@@ -93,60 +123,96 @@ function App() {
     saveJson(STORAGE_KEYS.settings, settings)
   }, [settings])
 
+  const nonArchivedRoutines = useMemo(
+    () => routineBundle.routines.filter((routine) => !routine.isArchived),
+    [routineBundle.routines],
+  )
+
+  const routineById = useMemo(
+    () => new Map(routineBundle.routines.map((routine) => [routine.id, routine])),
+    [routineBundle.routines],
+  )
+
   useEffect(() => {
-    if (routine.days.length === 0) {
-      setSelectedDayId('')
+    if (nonArchivedRoutines.length === 0) {
       return
     }
 
-    if (!routine.days.some((day) => day.id === selectedDayId)) {
-      setSelectedDayId(routine.days[0].id)
+    const selectedRoutineId = settings.selectedRoutineId
+    if (!selectedRoutineId || !routineById.has(selectedRoutineId) || routineById.get(selectedRoutineId)?.isArchived) {
+      setSettings((prev) => ({
+        ...prev,
+        selectedRoutineId: nonArchivedRoutines[0].id,
+      }))
     }
-  }, [routine.days, selectedDayId])
+  }, [settings.selectedRoutineId, routineById, nonArchivedRoutines])
 
-  const sortedDays = useMemo(() => [...routine.days].sort((a, b) => a.order - b.order), [routine.days])
+  const activeRoutine = useMemo(() => {
+    if (!settings.selectedRoutineId) {
+      return nonArchivedRoutines[0] ?? null
+    }
+    const candidate = routineById.get(settings.selectedRoutineId)
+    if (!candidate || candidate.isArchived) {
+      return nonArchivedRoutines[0] ?? null
+    }
+    return candidate
+  }, [settings.selectedRoutineId, routineById, nonArchivedRoutines])
 
-  const selectedDay = useMemo(
-    () => sortedDays.find((day) => day.id === selectedDayId),
-    [sortedDays, selectedDayId],
+  const activeRoutineId = activeRoutine?.id ?? ''
+
+  const routineDays = useMemo(
+    () => sortDays(routineBundle.days.filter((day) => day.routineId === activeRoutineId)),
+    [routineBundle.days, activeRoutineId],
   )
 
-  const dayExercises = useMemo(
-    () => sortExercises(routine.exercises.filter((exercise) => exercise.dayId === selectedDayId)),
-    [routine.exercises, selectedDayId],
+  const allExercisesForActiveRoutine = useMemo(
+    () => routineBundle.exercises.filter((exercise) => exercise.routineId === activeRoutineId),
+    [routineBundle.exercises, activeRoutineId],
   )
 
-  const exerciseById = useMemo(() => {
-    const map = new Map<string, Exercise>()
-    routine.exercises.forEach((exercise) => map.set(exercise.id, exercise))
+  const exercisesByDay = useMemo(() => {
+    const map = new Map<string, RoutineExercise[]>()
+    routineDays.forEach((day) => {
+      map.set(
+        day.id,
+        sortExercises(allExercisesForActiveRoutine.filter((exercise) => exercise.dayId === day.id)),
+      )
+    })
     return map
-  }, [routine.exercises])
-
-  const sortedExercisesByName = useMemo(
-    () => [...routine.exercises].sort((a, b) => a.name.localeCompare(b.name)),
-    [routine.exercises],
-  )
-
-  const dayStats = useMemo(
-    () =>
-      sortedDays.map((day) => ({
-        ...day,
-        exerciseCount: routine.exercises.filter((exercise) => exercise.dayId === day.id).length,
-        logCount: logs.filter((log) => log.dayId === day.id).length,
-      })),
-    [sortedDays, routine.exercises, logs],
-  )
-
-  const weeklyVolume = useMemo(() => calcWeeklyVolume(logs), [logs])
+  }, [routineDays, allExercisesForActiveRoutine])
 
   useEffect(() => {
-    if (!selectedDayId) {
+    if (routineDays.length === 0) {
+      setRoutineEditorDayId('')
+      setTrackDayId('')
       return
     }
 
+    if (!routineDays.some((day) => day.id === routineEditorDayId)) {
+      setRoutineEditorDayId(routineDays[0].id)
+    }
+
+    if (!routineDays.some((day) => day.id === trackDayId)) {
+      setTrackDayId(routineDays[0].id)
+    }
+  }, [routineDays, routineEditorDayId, trackDayId])
+
+  const routineEditorDay = routineDays.find((day) => day.id === routineEditorDayId) ?? null
+  const trackDay = routineDays.find((day) => day.id === trackDayId) ?? null
+
+  const editorExercises = useMemo(
+    () => exercisesByDay.get(routineEditorDayId) ?? [],
+    [exercisesByDay, routineEditorDayId],
+  )
+  const trackExercises = useMemo(
+    () => exercisesByDay.get(trackDayId) ?? [],
+    [exercisesByDay, trackDayId],
+  )
+
+  useEffect(() => {
     setWorkoutDraft((prev) => {
       const next = { ...prev }
-      dayExercises.forEach((exercise) => {
+      trackExercises.forEach((exercise) => {
         if (!next[exercise.id]) {
           next[exercise.id] = {
             sets: Array.from({ length: Math.max(exercise.targetSets, 1) }, emptyWorkoutSet),
@@ -156,40 +222,155 @@ function App() {
       })
       return next
     })
-  }, [selectedDayId, dayExercises])
+  }, [trackExercises])
 
-  const updateRoutine = (nextRoutine: RoutineState): void => {
-    setRoutine(buildRoutineWithMedia(nextRoutine, media))
+  const requestRoutineChange = (nextRoutineId: string, reason: 'manual' | 'system' = 'manual'): boolean => {
+    if (!nextRoutineId || nextRoutineId === settings.selectedRoutineId) {
+      return true
+    }
+
+    const shouldConfirm =
+      reason === 'manual' &&
+      settings.routineLockEnabled &&
+      Boolean(settings.selectedRoutineId)
+
+    if (shouldConfirm) {
+      const ok = window.confirm(
+        'Cambiar la rutina activa de este dispositivo puede mezclar el flujo de tracking. Quieres cambiar la rutina que estas registrando?',
+      )
+      if (!ok) {
+        return false
+      }
+    }
+
+    setSettings((prev) => ({
+      ...prev,
+      selectedRoutineId: nextRoutineId,
+      routineLockConfirmedAt: new Date().toISOString(),
+    }))
+
+    return true
+  }
+
+  const updateRoutineBundle = (updater: (current: RoutineBundle) => RoutineBundle): void => {
+    setRoutineBundle((current) => updater(current))
+  }
+
+  const updateActiveRoutineField = (field: 'name' | 'description', value: string): void => {
+    if (!activeRoutine) {
+      return
+    }
+
+    updateRoutineBundle((current) => ({
+      ...current,
+      routines: current.routines.map((routine) =>
+        routine.id === activeRoutine.id
+          ? {
+              ...routine,
+              [field]: field === 'name' ? toTitle(value) : value,
+              updatedAt: new Date().toISOString(),
+            }
+          : routine,
+      ),
+    }))
+  }
+
+  const createRoutine = (): void => {
+    const name = newRoutineName.trim()
+    if (!name) {
+      return
+    }
+
+    const timestamp = new Date().toISOString()
+    const routineId = createId('routine')
+    const dayId = createId('day')
+
+    const routine: Routine = {
+      id: routineId,
+      name: toTitle(name),
+      description: newRoutineDescription.trim(),
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      isArchived: false,
+    }
+
+    const firstDay: RoutineDay = {
+      id: dayId,
+      routineId,
+      name: 'Dia 1',
+      focus: 'Nuevo foco',
+      order: 1,
+    }
+
+    updateRoutineBundle((current) => ({
+      routines: [...current.routines, routine],
+      days: [...current.days, firstDay],
+      exercises: current.exercises,
+    }))
+
+    setNewRoutineName('')
+    setNewRoutineDescription('')
+    setUiMessage('Rutina creada. Si quieres usarla en este dispositivo, seleccionala y confirma el cambio.')
+  }
+
+  const archiveRoutine = (routineId: string, archive: boolean): void => {
+    const routine = routineById.get(routineId)
+    if (!routine) {
+      return
+    }
+
+    if (routine.id === activeRoutineId && archive) {
+      setUiMessage('No puedes archivar la rutina activa. Cambia de rutina primero.')
+      return
+    }
+
+    updateRoutineBundle((current) => ({
+      ...current,
+      routines: current.routines.map((item) =>
+        item.id === routineId
+          ? {
+              ...item,
+              isArchived: archive,
+              updatedAt: new Date().toISOString(),
+            }
+          : item,
+      ),
+    }))
   }
 
   const addDay = (): void => {
+    if (!activeRoutine) {
+      return
+    }
+
     const name = newDayName.trim()
     if (!name) {
       return
     }
 
-    const dayId = createId('day')
-    const nextDay = {
-      id: dayId,
+    const nextDay: RoutineDay = {
+      id: createId('day'),
+      routineId: activeRoutine.id,
       name: toTitle(name),
       focus: newDayFocus.trim() || 'Sin foco definido',
-      order: routine.days.length + 1,
+      order: routineDays.length + 1,
     }
 
-    updateRoutine({
-      ...routine,
-      days: [...routine.days, nextDay],
-    })
+    updateRoutineBundle((current) => ({
+      ...current,
+      days: [...current.days, nextDay],
+    }))
 
+    setRoutineEditorDayId(nextDay.id)
+    setTrackDayId(nextDay.id)
     setNewDayName('')
     setNewDayFocus('')
-    setSelectedDayId(dayId)
   }
 
   const updateDayField = (dayId: string, field: 'name' | 'focus', value: string): void => {
-    updateRoutine({
-      ...routine,
-      days: routine.days.map((day) =>
+    updateRoutineBundle((current) => ({
+      ...current,
+      days: current.days.map((day) =>
         day.id === dayId
           ? {
               ...day,
@@ -197,7 +378,7 @@ function App() {
             }
           : day,
       ),
-    })
+    }))
   }
 
   const deleteDay = (dayId: string): void => {
@@ -205,36 +386,30 @@ function App() {
       return
     }
 
-    const deletedExerciseIds = new Set(
-      routine.exercises.filter((exercise) => exercise.dayId === dayId).map((exercise) => exercise.id),
+    const removedExerciseIds = new Set(
+      routineBundle.exercises.filter((exercise) => exercise.dayId === dayId).map((exercise) => exercise.id),
     )
 
-    const nextRoutine = {
-      days: routine.days
+    updateRoutineBundle((current) => ({
+      routines: current.routines,
+      days: current.days
         .filter((day) => day.id !== dayId)
-        .map((day, idx) => ({
-          ...day,
-          order: idx + 1,
-        })),
-      exercises: routine.exercises.filter((exercise) => !deletedExerciseIds.has(exercise.id)),
-    }
+        .map((day) => {
+          if (day.routineId !== activeRoutineId) {
+            return day
+          }
+          const sorted = sortDays(current.days.filter((item) => item.routineId === activeRoutineId && item.id !== dayId))
+          const nextOrder = sorted.findIndex((item) => item.id === day.id) + 1
+          return nextOrder > 0 ? { ...day, order: nextOrder } : day
+        }),
+      exercises: current.exercises.filter((exercise) => !removedExerciseIds.has(exercise.id)),
+    }))
 
-    const nextMedia = media.map((item) => {
-      const nextExerciseIds = item.exerciseIds.filter((exerciseId) => !deletedExerciseIds.has(exerciseId))
-      return {
-        ...item,
-        exerciseIds: nextExerciseIds,
-        status: nextExerciseIds.length > 0 ? ('assigned' as const) : ('unassigned' as const),
-      }
-    })
-
-    setMedia(nextMedia)
-    setRoutine(buildRoutineWithMedia(nextRoutine, nextMedia))
-    setLogs((current) => current.filter((log) => log.dayId !== dayId && !deletedExerciseIds.has(log.exerciseId)))
+    setLogs((current) => current.filter((log) => log.dayId !== dayId && !removedExerciseIds.has(log.exerciseId)))
   }
 
   const addExercise = (): void => {
-    if (!selectedDayId) {
+    if (!activeRoutine || !routineEditorDayId) {
       return
     }
 
@@ -243,11 +418,12 @@ function App() {
       return
     }
 
-    const exercisesInDay = routine.exercises.filter((exercise) => exercise.dayId === selectedDayId)
+    const dayExercises = exercisesByDay.get(routineEditorDayId) ?? []
 
-    const nextExercise: Exercise = {
+    const exercise: RoutineExercise = {
       id: createId('ex'),
-      dayId: selectedDayId,
+      routineId: activeRoutine.id,
+      dayId: routineEditorDayId,
       slug: toSlug(name),
       name: toTitle(name),
       muscleGroup: newExerciseGroup.trim() || 'General',
@@ -256,23 +432,22 @@ function App() {
       targetWeight: 0,
       restSeconds: 60,
       notes: '',
-      order: exercisesInDay.length + 1,
-      mediaIds: [],
+      order: dayExercises.length + 1,
     }
 
-    updateRoutine({
-      ...routine,
-      exercises: [...routine.exercises, nextExercise],
-    })
+    updateRoutineBundle((current) => ({
+      ...current,
+      exercises: [...current.exercises, exercise],
+    }))
 
     setNewExerciseName('')
     setNewExerciseGroup('')
   }
 
-  const updateExercise = (exerciseId: string, patch: Partial<Exercise>): void => {
-    updateRoutine({
-      ...routine,
-      exercises: routine.exercises.map((exercise) =>
+  const updateExercise = (exerciseId: string, patch: Partial<RoutineExercise>): void => {
+    updateRoutineBundle((current) => ({
+      ...current,
+      exercises: current.exercises.map((exercise) =>
         exercise.id === exerciseId
           ? {
               ...exercise,
@@ -281,7 +456,7 @@ function App() {
             }
           : exercise,
       ),
-    })
+    }))
   }
 
   const deleteExercise = (exerciseId: string): void => {
@@ -289,54 +464,35 @@ function App() {
       return
     }
 
-    const nextMedia = media.map((item) => {
-      const nextExerciseIds = item.exerciseIds.filter((id) => id !== exerciseId)
-      return {
-        ...item,
-        exerciseIds: nextExerciseIds,
-        status: nextExerciseIds.length > 0 ? ('assigned' as const) : ('unassigned' as const),
-      }
-    })
+    updateRoutineBundle((current) => ({
+      ...current,
+      exercises: current.exercises.filter((exercise) => exercise.id !== exerciseId),
+    }))
 
-    setMedia(nextMedia)
     setLogs((current) => current.filter((log) => log.exerciseId !== exerciseId))
-    setRoutine(
-      buildRoutineWithMedia(
-        {
-          ...routine,
-          exercises: routine.exercises
-            .filter((exercise) => exercise.id !== exerciseId)
-            .map((exercise, _, arr) => {
-              const sameDay = arr.filter((item) => item.dayId === exercise.dayId).sort((a, b) => a.order - b.order)
-              const newOrder = sameDay.findIndex((item) => item.id === exercise.id) + 1
-              return { ...exercise, order: newOrder }
-            }),
-        },
-        nextMedia,
-      ),
-    )
   }
 
   const moveExercise = (exerciseId: string, direction: 'up' | 'down'): void => {
-    const current = sortExercises(routine.exercises.filter((exercise) => exercise.dayId === selectedDayId))
-    const idx = current.findIndex((exercise) => exercise.id === exerciseId)
-    if (idx < 0) {
+    const currentDayExercises = [...(exercisesByDay.get(routineEditorDayId) ?? [])]
+    const index = currentDayExercises.findIndex((exercise) => exercise.id === exerciseId)
+    if (index < 0) {
       return
     }
 
-    const targetIdx = direction === 'up' ? idx - 1 : idx + 1
-    if (targetIdx < 0 || targetIdx >= current.length) {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    if (targetIndex < 0 || targetIndex >= currentDayExercises.length) {
       return
     }
 
-    const reordered = [...current]
-    const [item] = reordered.splice(idx, 1)
-    reordered.splice(targetIdx, 0, item)
+    const reordered = [...currentDayExercises]
+    const [item] = reordered.splice(index, 1)
+    reordered.splice(targetIndex, 0, item)
 
     const orderMap = new Map(reordered.map((exercise, order) => [exercise.id, order + 1]))
-    updateRoutine({
-      ...routine,
-      exercises: routine.exercises.map((exercise) =>
+
+    updateRoutineBundle((current) => ({
+      ...current,
+      exercises: current.exercises.map((exercise) =>
         orderMap.has(exercise.id)
           ? {
               ...exercise,
@@ -344,7 +500,7 @@ function App() {
             }
           : exercise,
       ),
-    })
+    }))
   }
 
   const updateWorkoutSet = (
@@ -354,12 +510,12 @@ function App() {
     rawValue: string | boolean,
   ): void => {
     setWorkoutDraft((prev) => {
-      const exerciseDraft = prev[exerciseId]
-      if (!exerciseDraft) {
+      const draft = prev[exerciseId]
+      if (!draft) {
         return prev
       }
 
-      const sets = exerciseDraft.sets.map((set) => {
+      const sets = draft.sets.map((set) => {
         if (set.id !== setId) {
           return set
         }
@@ -368,53 +524,19 @@ function App() {
           return { ...set, done: Boolean(rawValue) }
         }
 
-        const numeric = Number(rawValue)
-        if (!Number.isFinite(numeric)) {
+        const numericValue = Number(rawValue)
+        if (!Number.isFinite(numericValue)) {
           return set
         }
 
-        return { ...set, [field]: numeric }
+        return { ...set, [field]: numericValue }
       })
 
       return {
         ...prev,
         [exerciseId]: {
-          ...exerciseDraft,
+          ...draft,
           sets,
-        },
-      }
-    })
-  }
-
-  const addWorkoutSet = (exerciseId: string): void => {
-    setWorkoutDraft((prev) => {
-      const exerciseDraft = prev[exerciseId]
-      if (!exerciseDraft) {
-        return prev
-      }
-
-      return {
-        ...prev,
-        [exerciseId]: {
-          ...exerciseDraft,
-          sets: [...exerciseDraft.sets, emptyWorkoutSet()],
-        },
-      }
-    })
-  }
-
-  const removeWorkoutSet = (exerciseId: string, setId: string): void => {
-    setWorkoutDraft((prev) => {
-      const exerciseDraft = prev[exerciseId]
-      if (!exerciseDraft || exerciseDraft.sets.length <= 1) {
-        return prev
-      }
-
-      return {
-        ...prev,
-        [exerciseId]: {
-          ...exerciseDraft,
-          sets: exerciseDraft.sets.filter((set) => set.id !== setId),
         },
       }
     })
@@ -422,30 +544,64 @@ function App() {
 
   const updateWorkoutNotes = (exerciseId: string, value: string): void => {
     setWorkoutDraft((prev) => {
-      const exerciseDraft = prev[exerciseId]
-      if (!exerciseDraft) {
+      const draft = prev[exerciseId]
+      if (!draft) {
         return prev
       }
 
       return {
         ...prev,
         [exerciseId]: {
-          ...exerciseDraft,
+          ...draft,
           notes: value,
         },
       }
     })
   }
 
+  const addWorkoutSet = (exerciseId: string): void => {
+    setWorkoutDraft((prev) => {
+      const draft = prev[exerciseId]
+      if (!draft) {
+        return prev
+      }
+
+      return {
+        ...prev,
+        [exerciseId]: {
+          ...draft,
+          sets: [...draft.sets, emptyWorkoutSet()],
+        },
+      }
+    })
+  }
+
+  const removeWorkoutSet = (exerciseId: string, setId: string): void => {
+    setWorkoutDraft((prev) => {
+      const draft = prev[exerciseId]
+      if (!draft || draft.sets.length <= 1) {
+        return prev
+      }
+
+      return {
+        ...prev,
+        [exerciseId]: {
+          ...draft,
+          sets: draft.sets.filter((set) => set.id !== setId),
+        },
+      }
+    })
+  }
+
   const saveWorkoutSession = (): void => {
-    if (!selectedDay) {
+    if (!activeRoutine || !trackDay) {
       return
     }
 
     const now = new Date().toISOString()
     const entries: WorkoutLog[] = []
 
-    dayExercises.forEach((exercise) => {
+    trackExercises.forEach((exercise) => {
       const draft = workoutDraft[exercise.id]
       if (!draft) {
         return
@@ -462,8 +618,10 @@ function App() {
       entries.push({
         id: createId('log'),
         createdAt: now,
-        dayId: selectedDay.id,
-        dayName: selectedDay.name,
+        routineId: activeRoutine.id,
+        routineName: activeRoutine.name,
+        dayId: trackDay.id,
+        dayName: trackDay.name,
         exerciseId: exercise.id,
         exerciseName: exercise.name,
         sets: relevantSets.length > 0 ? relevantSets : draft.sets,
@@ -472,7 +630,7 @@ function App() {
     })
 
     if (entries.length === 0) {
-      setWorkoutMessage('No hay sets cargados para guardar.')
+      setUiMessage('No hay sets cargados para guardar.')
       return
     }
 
@@ -480,7 +638,7 @@ function App() {
 
     setWorkoutDraft((prev) => {
       const next = { ...prev }
-      dayExercises.forEach((exercise) => {
+      trackExercises.forEach((exercise) => {
         next[exercise.id] = {
           sets: Array.from({ length: Math.max(exercise.targetSets, 1) }, emptyWorkoutSet),
           notes: '',
@@ -489,82 +647,142 @@ function App() {
       return next
     })
 
-    setWorkoutMessage(`Sesion guardada: ${entries.length} ejercicios registrados.`)
-  }
-
-  const toggleMediaExercise = (mediaId: string, exerciseId: string, checked: boolean): void => {
-    const nextMedia = media.map((item) => {
-      if (item.id !== mediaId || item.isDuplicate) {
-        return item
-      }
-
-      const nextExerciseIds = checked
-        ? Array.from(new Set([...item.exerciseIds, exerciseId]))
-        : item.exerciseIds.filter((id) => id !== exerciseId)
-
-      return {
-        ...item,
-        exerciseIds: nextExerciseIds,
-        status: nextExerciseIds.length > 0 ? ('assigned' as const) : ('unassigned' as const),
-      }
-    })
-
-    setMedia(nextMedia)
-    setRoutine((prev) => buildRoutineWithMedia(prev, nextMedia))
-  }
-
-  const clearMediaAssignments = (mediaId: string): void => {
-    const nextMedia = media.map((item) => {
-      if (item.id !== mediaId) {
-        return item
-      }
-      return {
-        ...item,
-        exerciseIds: [],
-        status: 'unassigned' as const,
-      }
-    })
-
-    setMedia(nextMedia)
-    setRoutine((prev) => buildRoutineWithMedia(prev, nextMedia))
+    setUiMessage(`Sesion guardada: ${entries.length} ejercicios registrados en ${activeRoutine.name}.`)
   }
 
   const updateMediaRole = (mediaId: string, role: MediaRole): void => {
-    const nextMedia = media.map((item) => (item.id === mediaId ? { ...item, role } : item))
-    setMedia(nextMedia)
-    setRoutine((prev) => buildRoutineWithMedia(prev, nextMedia))
+    setMedia((current) => current.map((item) => (item.id === mediaId ? { ...item, role } : item)))
   }
+
+  const removeExternalMedia = (mediaId: string): void => {
+    setMedia((current) => current.filter((item) => !(item.id === mediaId && item.origin === 'external')))
+  }
+
+  const localFilteredMedia = useMemo(() => {
+    const query = mediaSearchTerm.trim().toLowerCase()
+
+    return media.filter((item) => {
+      if (mediaTypeFilter !== 'all' && item.type !== mediaTypeFilter) {
+        return false
+      }
+      if (mediaOriginFilter !== 'all' && item.origin !== mediaOriginFilter) {
+        return false
+      }
+
+      if (!query) {
+        return true
+      }
+
+      const haystack = [
+        item.title,
+        item.slug,
+        item.provider,
+        item.license ?? '',
+        item.attribution ?? '',
+        item.path ?? '',
+        item.externalUrl ?? '',
+        item.tags.join(' '),
+      ]
+        .join(' ')
+        .toLowerCase()
+
+      return haystack.includes(query)
+    })
+  }, [media, mediaSearchTerm, mediaTypeFilter, mediaOriginFilter])
+
+  const searchInternet = async (): Promise<void> => {
+    const query = internetQuery.trim()
+    if (!query) {
+      return
+    }
+
+    setInternetLoading(true)
+    setInternetError('')
+
+    try {
+      const results = await searchInternetMedia(query)
+      setInternetResults(results)
+      if (results.length === 0) {
+        setInternetError('No se encontraron resultados externos para esa busqueda.')
+      }
+    } catch {
+      setInternetError('No fue posible consultar fuentes externas en este momento.')
+    } finally {
+      setInternetLoading(false)
+    }
+  }
+
+  const addExternalMediaToLibrary = (result: InternetMediaResult): void => {
+    setMedia((current) => {
+      const exists = current.some((item) => item.externalUrl === result.url)
+      if (exists) {
+        return current
+      }
+
+      const item: MediaItem = {
+        id: createId('external-media'),
+        title: result.title,
+        slug: toSlug(result.title),
+        type: result.type,
+        role: 'reference',
+        origin: 'external',
+        provider: result.provider,
+        path: null,
+        externalUrl: result.url,
+        thumbnailUrl: result.thumbnailUrl,
+        license: result.license,
+        attribution: result.attribution,
+        tags: result.tags,
+        isDuplicate: false,
+        checksum: null,
+        createdAt: new Date().toISOString(),
+      }
+
+      return [item, ...current]
+    })
+
+    setUiMessage('Recurso externo agregado a tu biblioteca de media.')
+  }
+
+  const logsForActiveRoutine = useMemo(
+    () => logs.filter((log) => log.routineId === activeRoutineId),
+    [logs, activeRoutineId],
+  )
+
+  const weeklyVolume = useMemo(
+    () => calcWeeklyVolume(logs, activeRoutineId || undefined),
+    [logs, activeRoutineId],
+  )
+
+  const recentLogs = useMemo(
+    () => logsForActiveRoutine.slice(0, 12),
+    [logsForActiveRoutine],
+  )
+
+  const dayStats = useMemo(
+    () =>
+      routineDays.map((day) => ({
+        ...day,
+        exerciseCount: (exercisesByDay.get(day.id) ?? []).length,
+        logCount: logsForActiveRoutine.filter((log) => log.dayId === day.id).length,
+      })),
+    [routineDays, exercisesByDay, logsForActiveRoutine],
+  )
 
   const mediaCounts = useMemo(
     () => ({
       total: media.length,
-      assigned: media.filter((item) => item.status === 'assigned').length,
-      unassigned: media.filter((item) => item.status === 'unassigned').length,
-      duplicates: media.filter((item) => item.isDuplicate).length,
-      single: media.filter((item) => item.role === 'single').length,
-      multi: media.filter((item) => item.role === 'multi').length,
-      reference: media.filter((item) => item.role === 'reference').length,
+      local: media.filter((item) => item.origin === 'local').length,
+      external: media.filter((item) => item.origin === 'external').length,
+      images: media.filter((item) => item.type === 'image').length,
+      videos: media.filter((item) => item.type === 'video').length,
     }),
     [media],
   )
 
-  const filteredMedia = useMemo(() => {
-    return media.filter((item) => {
-      if (mediaFilter === 'all') {
-        return true
-      }
-      if (mediaFilter === 'unassigned') {
-        return item.exerciseIds.length === 0
-      }
-      return item.role === mediaFilter
-    })
-  }, [media, mediaFilter])
-
-  const recentLogs = useMemo(() => logs.slice(0, 12), [logs])
-
   const exportBackup = (): void => {
     downloadJson(`training-app-backup-${new Date().toISOString().slice(0, 10)}.json`, {
-      routine,
+      routineBundle,
       media,
       logs,
       settings,
@@ -579,47 +797,53 @@ function App() {
     }
 
     try {
-      const parsed = await readJsonFile<{
-        routine: RoutineState
-        media: unknown
-        logs: WorkoutLog[]
-        settings: AppSettings
-      }>(file)
+      const parsed = await readJsonFile<ImportPayload>(file)
+      const nextRoutineBundle = normalizeRoutineBundleState(parsed.routineBundle)
+      const nextMedia = normalizeMediaState(parsed.media)
+      const nextLogs = normalizeLogsState(parsed.logs, nextRoutineBundle)
+      let nextSettings = normalizeSettingsState(parsed.settings, nextRoutineBundle)
 
-      if (!parsed.routine?.days || !parsed.routine?.exercises || !parsed.settings) {
-        throw new Error('Estructura invalida')
+      if (
+        settings.routineLockEnabled &&
+        nextSettings.selectedRoutineId &&
+        settings.selectedRoutineId &&
+        nextSettings.selectedRoutineId !== settings.selectedRoutineId
+      ) {
+        const confirmed = window.confirm(
+          'El backup tiene una rutina activa diferente. Quieres cambiar la rutina activa de este dispositivo?',
+        )
+
+        if (!confirmed) {
+          nextSettings = {
+            ...nextSettings,
+            selectedRoutineId: settings.selectedRoutineId,
+          }
+        }
       }
 
-      const normalizedMedia = normalizeMediaState(parsed.media)
-
-      setMedia(normalizedMedia)
-      setRoutine(buildRoutineWithMedia(parsed.routine, normalizedMedia))
-      setLogs(parsed.logs ?? [])
-      setSettings({
-        ...seedSettings,
-        ...parsed.settings,
-        schemaVersion: seedSettings.schemaVersion,
-      })
-      setWorkoutMessage('Backup importado correctamente.')
+      setRoutineBundle(nextRoutineBundle)
+      setMedia(nextMedia)
+      setLogs(nextLogs)
+      setSettings(nextSettings)
+      setUiMessage('Backup importado correctamente.')
     } catch {
-      setWorkoutMessage('No se pudo importar el archivo.')
+      setUiMessage('No se pudo importar el archivo.')
     } finally {
       event.target.value = ''
     }
   }
 
   const resetAllData = (): void => {
-    if (!window.confirm('Resetear rutina, media y registros?')) {
+    if (!window.confirm('Resetear rutinas, media y registros?')) {
       return
     }
 
-    setRoutine(routineWithMedia)
+    setRoutineBundle(seedRoutineBundle)
     setMedia(seedMedia)
     setLogs([])
     setSettings(seedSettings)
     setWorkoutDraft({})
-    setSelectedDayId(routineWithMedia.days[0]?.id ?? '')
-    setWorkoutMessage('Datos restaurados a la semilla inicial.')
+    setUiMessage('Datos restaurados a la configuracion inicial.')
   }
 
   return (
@@ -627,7 +851,7 @@ function App() {
       <header className="topbar">
         <div>
           <h1>Training App</h1>
-          <p>Rutina de 4 dias, registro local y videos con soporte single/multi desde docs.</p>
+          <p>Rutinas multiples por dispositivo, tracking por dia y media hub desacoplado.</p>
         </div>
         <span className="badge">{settings.units.toUpperCase()}</span>
       </header>
@@ -646,31 +870,50 @@ function App() {
       </nav>
 
       <main className="content">
+        {uiMessage && (
+          <section className="panel full">
+            <p className="hint">{uiMessage}</p>
+          </section>
+        )}
+
         {activeTab === 'dashboard' && (
           <section className="panel-grid">
             <article className="panel stat">
-              <h2>Resumen</h2>
-              <p>{routine.days.length} dias activos</p>
-              <p>{routine.exercises.length} ejercicios</p>
-              <p>{logs.length} registros</p>
+              <h2>Rutina activa</h2>
+              <p>{activeRoutine?.name ?? 'Sin rutina'}</p>
+              <p>Rutinas disponibles: {nonArchivedRoutines.length}</p>
+              <p>Dias de la rutina activa: {routineDays.length}</p>
+              <p>Ejercicios de la rutina activa: {allExercisesForActiveRoutine.length}</p>
+            </article>
+
+            <article className="panel stat">
+              <h2>Tracking</h2>
+              <p>{logsForActiveRoutine.length} registros en rutina activa</p>
               <p>{Math.round(weeklyVolume)} volumen ultimos 7 dias ({settings.units})</p>
+              <p>Lock rutina por dispositivo: {settings.routineLockEnabled ? 'Activo' : 'Inactivo'}</p>
             </article>
 
             <article className="panel stat">
               <h2>Media</h2>
-              <p>{mediaCounts.total} archivos</p>
-              <p>{mediaCounts.assigned} asignados</p>
-              <p>{mediaCounts.unassigned} sin asignar</p>
-              <p>{mediaCounts.single} single</p>
-              <p>{mediaCounts.multi} multi</p>
-              <p>{mediaCounts.duplicates} duplicados archivados</p>
+              <p>{mediaCounts.total} recursos</p>
+              <p>{mediaCounts.local} locales</p>
+              <p>{mediaCounts.external} externos (URL)</p>
+              <p>{mediaCounts.videos} videos</p>
             </article>
 
             <article className="panel full">
-              <h2>Dias de rutina</h2>
+              <h2>Dias de la rutina activa</h2>
               <div className="day-overview">
                 {dayStats.map((day) => (
-                  <button key={day.id} type="button" className="day-chip" onClick={() => setSelectedDayId(day.id)}>
+                  <button
+                    key={day.id}
+                    type="button"
+                    className="day-chip"
+                    onClick={() => {
+                      setTrackDayId(day.id)
+                      setActiveTab('workout')
+                    }}
+                  >
                     <strong>{day.name}</strong>
                     <span>{day.focus}</span>
                     <span>{day.exerciseCount} ejercicios</span>
@@ -681,13 +924,14 @@ function App() {
             </article>
 
             <article className="panel full">
-              <h2>Registros recientes</h2>
+              <h2>Registros recientes (rutina activa)</h2>
               <div className="logs-list">
-                {recentLogs.length === 0 && <p>No hay sesiones registradas aun.</p>}
+                {recentLogs.length === 0 && <p>No hay sesiones registradas para esta rutina.</p>}
                 {recentLogs.map((log) => (
                   <div key={log.id} className="log-row">
                     <strong>{log.exerciseName}</strong>
                     <span>{new Date(log.createdAt).toLocaleString()}</span>
+                    <span>{log.dayName}</span>
                     <span>{log.sets.length} sets</span>
                   </div>
                 ))}
@@ -696,46 +940,115 @@ function App() {
           </section>
         )}
 
-        {activeTab === 'routine' && (
+        {activeTab === 'routines' && (
           <section className="panel-grid">
             <article className="panel full">
-              <h2>Dias</h2>
+              <h2>Seleccion de rutina (dispositivo)</h2>
+              <label>
+                Rutina activa
+                <select
+                  value={activeRoutineId}
+                  onChange={(event) => requestRoutineChange(event.target.value, 'manual')}
+                >
+                  {nonArchivedRoutines.map((routine) => (
+                    <option key={routine.id} value={routine.id}>
+                      {routine.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="hint">
+                Este dispositivo recuerda la rutina seleccionada y pedira confirmacion antes de cambiarla.
+              </p>
+            </article>
+
+            <article className="panel full">
+              <h2>Crear rutina desde cero (UI)</h2>
               <div className="inline-form">
                 <input
-                  value={newDayName}
-                  placeholder="Nuevo dia"
-                  onChange={(event) => setNewDayName(event.target.value)}
+                  value={newRoutineName}
+                  placeholder="Nombre de rutina"
+                  onChange={(event) => setNewRoutineName(event.target.value)}
                 />
                 <input
-                  value={newDayFocus}
-                  placeholder="Foco del dia"
-                  onChange={(event) => setNewDayFocus(event.target.value)}
+                  value={newRoutineDescription}
+                  placeholder="Descripcion"
+                  onChange={(event) => setNewRoutineDescription(event.target.value)}
                 />
-                <button type="button" onClick={addDay}>
+                <button type="button" onClick={createRoutine}>
+                  Crear rutina
+                </button>
+              </div>
+              <p className="hint">La rutina nueva incluye un Dia 1 base para empezar a cargar ejercicios.</p>
+            </article>
+
+            <article className="panel full">
+              <h2>Rutinas disponibles</h2>
+              <div className="day-list">
+                {routineBundle.routines.map((routine) => (
+                  <div key={routine.id} className={routine.id === activeRoutineId ? 'day-card selected' : 'day-card'}>
+                    <label>
+                      Nombre
+                      <input
+                        value={routine.name}
+                        disabled={routine.id !== activeRoutineId}
+                        onChange={(event) => updateActiveRoutineField('name', event.target.value)}
+                      />
+                    </label>
+                    <label>
+                      Descripcion
+                      <input
+                        value={routine.description}
+                        disabled={routine.id !== activeRoutineId}
+                        onChange={(event) => updateActiveRoutineField('description', event.target.value)}
+                      />
+                    </label>
+                    <div className="row-actions">
+                      <button type="button" onClick={() => requestRoutineChange(routine.id, 'manual')}>
+                        Usar en este dispositivo
+                      </button>
+                      <button
+                        type="button"
+                        className="danger"
+                        onClick={() => archiveRoutine(routine.id, !routine.isArchived)}
+                        disabled={routine.id === activeRoutineId && !routine.isArchived}
+                      >
+                        {routine.isArchived ? 'Desarchivar' : 'Archivar'}
+                      </button>
+                    </div>
+                    <p className="hint">Estado: {routine.isArchived ? 'Archivada' : 'Activa'}</p>
+                  </div>
+                ))}
+              </div>
+            </article>
+
+            <article className="panel full">
+              <h2>Dias de {activeRoutine?.name ?? 'rutina'}</h2>
+              <div className="inline-form">
+                <input value={newDayName} placeholder="Nuevo dia" onChange={(event) => setNewDayName(event.target.value)} />
+                <input value={newDayFocus} placeholder="Foco" onChange={(event) => setNewDayFocus(event.target.value)} />
+                <button type="button" onClick={addDay} disabled={!activeRoutine}>
                   Agregar dia
                 </button>
               </div>
 
               <div className="day-list">
-                {sortedDays.map((day) => (
-                  <div key={day.id} className={day.id === selectedDayId ? 'day-card selected' : 'day-card'}>
+                {routineDays.map((day) => (
+                  <div key={day.id} className={day.id === routineEditorDayId ? 'day-card selected' : 'day-card'}>
                     <label>
                       Nombre
-                      <input
-                        value={day.name}
-                        onChange={(event) => updateDayField(day.id, 'name', event.target.value)}
-                      />
+                      <input value={day.name} onChange={(event) => updateDayField(day.id, 'name', event.target.value)} />
                     </label>
                     <label>
                       Foco
-                      <input
-                        value={day.focus}
-                        onChange={(event) => updateDayField(day.id, 'focus', event.target.value)}
-                      />
+                      <input value={day.focus} onChange={(event) => updateDayField(day.id, 'focus', event.target.value)} />
                     </label>
                     <div className="row-actions">
-                      <button type="button" onClick={() => setSelectedDayId(day.id)}>
+                      <button type="button" onClick={() => setRoutineEditorDayId(day.id)}>
                         Editar ejercicios
+                      </button>
+                      <button type="button" onClick={() => setTrackDayId(day.id)}>
+                        Usar en tracking
                       </button>
                       <button type="button" className="danger" onClick={() => deleteDay(day.id)}>
                         Eliminar
@@ -747,8 +1060,7 @@ function App() {
             </article>
 
             <article className="panel full">
-              <h2>Ejercicios de {selectedDay?.name ?? 'dia'}</h2>
-
+              <h2>Ejercicios de {routineEditorDay?.name ?? 'dia'}</h2>
               <div className="inline-form">
                 <input
                   value={newExerciseName}
@@ -760,13 +1072,13 @@ function App() {
                   placeholder="Grupo muscular"
                   onChange={(event) => setNewExerciseGroup(event.target.value)}
                 />
-                <button type="button" onClick={addExercise} disabled={!selectedDayId}>
+                <button type="button" onClick={addExercise} disabled={!routineEditorDayId}>
                   Agregar ejercicio
                 </button>
               </div>
 
               <div className="exercise-list">
-                {dayExercises.map((exercise, index) => (
+                {editorExercises.map((exercise, index) => (
                   <article key={exercise.id} className="exercise-card">
                     <div className="exercise-head">
                       <h3>
@@ -849,8 +1161,6 @@ function App() {
                         onChange={(event) => updateExercise(exercise.id, { notes: event.target.value })}
                       />
                     </label>
-
-                    <p className="hint">Media asociada: {exercise.mediaIds.length}</p>
                   </article>
                 ))}
               </div>
@@ -861,11 +1171,25 @@ function App() {
         {activeTab === 'workout' && (
           <section className="panel-grid">
             <article className="panel full">
-              <h2>Registrar sesion</h2>
+              <h2>Tracking por dia</h2>
               <label>
-                Dia de entrenamiento
-                <select value={selectedDayId} onChange={(event) => setSelectedDayId(event.target.value)}>
-                  {sortedDays.map((day) => (
+                Rutina activa
+                <select
+                  value={activeRoutineId}
+                  onChange={(event) => requestRoutineChange(event.target.value, 'manual')}
+                >
+                  {nonArchivedRoutines.map((routine) => (
+                    <option key={routine.id} value={routine.id}>
+                      {routine.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                Dia
+                <select value={trackDayId} onChange={(event) => setTrackDayId(event.target.value)}>
+                  {routineDays.map((day) => (
                     <option key={day.id} value={day.id}>
                       {day.name} - {day.focus}
                     </option>
@@ -875,18 +1199,8 @@ function App() {
               <p className="hint">Fecha: {new Date().toLocaleDateString()}</p>
             </article>
 
-            {dayExercises.map((exercise) => {
+            {trackExercises.map((exercise) => {
               const draft = workoutDraft[exercise.id]
-              const linkedVideos = media.filter(
-                (item) =>
-                  item.type === 'video' &&
-                  !item.isDuplicate &&
-                  item.exerciseIds.includes(exercise.id),
-              )
-              const primaryVideo = linkedVideos.find((item) => item.role === 'single') ?? linkedVideos[0]
-              const relatedMultiVideos = linkedVideos.filter(
-                (item) => item.id !== primaryVideo?.id && item.role === 'multi',
-              )
 
               return (
                 <article key={exercise.id} className="panel full exercise-session">
@@ -896,32 +1210,6 @@ function App() {
                       Objetivo: {exercise.targetSets}x{exercise.targetReps} - {exercise.targetWeight} {settings.units}
                     </p>
                   </div>
-
-                  {primaryVideo && (
-                    <>
-                      <p className="hint">Guia principal ({roleLabel(primaryVideo.role)})</p>
-                      <video
-                        controls
-                        muted
-                        playsInline
-                        preload="metadata"
-                        src={resolveMediaPath(primaryVideo.path)}
-                        className="exercise-video"
-                      />
-                    </>
-                  )}
-
-                  {relatedMultiVideos.length > 0 && (
-                    <div className="mini-video-grid">
-                      <p className="hint">Biblioteca relacionada</p>
-                      {relatedMultiVideos.map((item) => (
-                        <div key={item.id} className="mini-video-item">
-                          <span>{item.title}</span>
-                          <video controls muted playsInline preload="metadata" src={resolveMediaPath(item.path)} />
-                        </div>
-                      ))}
-                    </div>
-                  )}
 
                   <div className="sets-table-wrap">
                     <table className="sets-table">
@@ -1016,7 +1304,6 @@ function App() {
                   Guardar sesion del dia
                 </button>
               </div>
-              {workoutMessage && <p className="hint">{workoutMessage}</p>}
             </article>
           </section>
         )}
@@ -1024,118 +1311,138 @@ function App() {
         {activeTab === 'media' && (
           <section className="panel-grid">
             <article className="panel full">
-              <h2>Bandeja de medios</h2>
-              <p className="hint">
-                Los videos multi se mantienen como biblioteca y pueden asociarse a varios ejercicios.
-              </p>
-              <div className="row-actions">
-                <button
-                  type="button"
-                  className={mediaFilter === 'all' ? 'active-filter' : ''}
-                  onClick={() => setMediaFilter('all')}
+              <h2>Busqueda local en biblioteca</h2>
+              <div className="inline-form">
+                <input
+                  value={mediaSearchTerm}
+                  placeholder="Buscar por nombre, tag, proveedor, url"
+                  onChange={(event) => setMediaSearchTerm(event.target.value)}
+                />
+                <select value={mediaTypeFilter} onChange={(event) => setMediaTypeFilter(event.target.value as MediaTypeFilter)}>
+                  <option value="all">Todos los tipos</option>
+                  <option value="image">Imagenes</option>
+                  <option value="video">Videos</option>
+                </select>
+                <select
+                  value={mediaOriginFilter}
+                  onChange={(event) => setMediaOriginFilter(event.target.value as MediaOriginFilter)}
                 >
-                  Todos
-                </button>
-                <button
-                  type="button"
-                  className={mediaFilter === 'single' ? 'active-filter' : ''}
-                  onClick={() => setMediaFilter('single')}
-                >
-                  Single
-                </button>
-                <button
-                  type="button"
-                  className={mediaFilter === 'multi' ? 'active-filter' : ''}
-                  onClick={() => setMediaFilter('multi')}
-                >
-                  Multi
-                </button>
-                <button
-                  type="button"
-                  className={mediaFilter === 'reference' ? 'active-filter' : ''}
-                  onClick={() => setMediaFilter('reference')}
-                >
-                  Reference
-                </button>
-                <button
-                  type="button"
-                  className={mediaFilter === 'unassigned' ? 'active-filter' : ''}
-                  onClick={() => setMediaFilter('unassigned')}
-                >
-                  Sin asignar
-                </button>
+                  <option value="all">Todos los origenes</option>
+                  <option value="local">Locales</option>
+                  <option value="external">Externos</option>
+                </select>
               </div>
             </article>
 
-            {filteredMedia.map((item) => {
-              const assignedNames = item.exerciseIds
-                .map((exerciseId) => exerciseById.get(exerciseId)?.name)
-                .filter((name): name is string => Boolean(name))
+            <article className="panel full">
+              <h2>Busqueda en internet</h2>
+              <div className="inline-form">
+                <input
+                  value={internetQuery}
+                  placeholder="Buscar en Openverse y Wikimedia"
+                  onChange={(event) => setInternetQuery(event.target.value)}
+                />
+                <button type="button" onClick={searchInternet} disabled={internetLoading}>
+                  {internetLoading ? 'Buscando...' : 'Buscar'}
+                </button>
+              </div>
+              {internetError && <p className="hint">{internetError}</p>}
+              <p className="hint">
+                Los resultados externos se guardan como URL en la biblioteca. Para dejarlos permanentes en el repo, usa pin manual desde codigo.
+              </p>
+            </article>
 
-              return (
-                <article key={item.id} className="panel media-card">
-                  <header>
-                    <h3>{item.title}</h3>
-                    <p>{item.type.toUpperCase()}</p>
-                    <div className="media-badges">
-                      <span className="media-badge">{roleLabel(item.role)}</span>
-                      {item.isDuplicate && <span className="media-badge media-badge-danger">Duplicado</span>}
+            {internetResults.length > 0 && (
+              <article className="panel full">
+                <h2>Resultados internet</h2>
+                <div className="media-results-grid">
+                  {internetResults.map((result) => (
+                    <div key={`${result.provider}-${result.id}`} className="media-result-card">
+                      <strong>{result.title}</strong>
+                      <span className="hint">{result.provider} - {result.type}</span>
+
+                      {result.type === 'image' && result.thumbnailUrl && (
+                        <img src={result.thumbnailUrl} alt={result.title} loading="lazy" />
+                      )}
+
+                      {result.type === 'video' && (
+                        <video controls muted playsInline preload="metadata" src={result.url} />
+                      )}
+
+                      <div className="row-actions">
+                        <button type="button" onClick={() => addExternalMediaToLibrary(result)}>
+                          Guardar URL en biblioteca
+                        </button>
+                        <a href={result.url} target="_blank" rel="noreferrer" className="link-button">
+                          Abrir / Descargar
+                        </a>
+                      </div>
                     </div>
-                  </header>
+                  ))}
+                </div>
+              </article>
+            )}
 
-                  {item.type === 'video' ? (
-                    <video controls muted playsInline preload="metadata" src={resolveMediaPath(item.path)} />
-                  ) : (
-                    <img src={resolveMediaPath(item.path)} alt={item.title} loading="lazy" />
-                  )}
+            <article className="panel full">
+              <h2>Biblioteca media</h2>
+              <div className="media-library-grid">
+                {localFilteredMedia.map((item) => {
+                  const previewUrl = item.origin === 'local' ? resolveMediaPath(item.path) : (item.externalUrl ?? item.thumbnailUrl)
+                  const resourceUrl = item.origin === 'external' ? item.externalUrl : previewUrl
 
-                  <label>
-                    Rol del archivo
-                    <select
-                      value={item.role}
-                      onChange={(event) => updateMediaRole(item.id, event.target.value as MediaRole)}
-                    >
-                      <option value="single">single</option>
-                      <option value="multi">multi</option>
-                      <option value="reference">reference</option>
-                    </select>
-                  </label>
+                  return (
+                    <article key={item.id} className="panel media-card">
+                      <header>
+                        <h3>{item.title}</h3>
+                        <p>{item.type.toUpperCase()} | {item.origin.toUpperCase()}</p>
+                        <p>{item.provider}</p>
+                      </header>
 
-                  <div className="media-assignment-block">
-                    <p className="hint">Asociar a ejercicios (multi-seleccion)</p>
-                    {item.isDuplicate && <p className="hint">Duplicado bloqueado para evitar ruido en sesiones.</p>}
-                    <div className="media-assignment-grid">
-                      {sortedExercisesByName.map((exercise) => (
-                        <label key={`${item.id}-${exercise.id}`} className="checkbox-row">
-                          <input
-                            type="checkbox"
-                            checked={item.exerciseIds.includes(exercise.id)}
-                            disabled={item.isDuplicate}
-                            onChange={(event) => toggleMediaExercise(item.id, exercise.id, event.target.checked)}
-                          />
-                          <span>{exercise.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                    <div className="row-actions">
-                      <button type="button" onClick={() => clearMediaAssignments(item.id)}>
-                        Limpiar asignaciones
-                      </button>
-                    </div>
-                  </div>
+                      {item.type === 'video' ? (
+                        <video controls muted playsInline preload="metadata" src={previewUrl ?? undefined} />
+                      ) : (
+                        <img src={previewUrl ?? undefined} alt={item.title} loading="lazy" />
+                      )}
 
-                  <p className="hint">Asignado: {assignedNames.length > 0 ? assignedNames.join(', ') : 'No'}</p>
-                  <p className="hint">Archivo: {item.path}</p>
-                </article>
-              )
-            })}
+                      <label>
+                        Rol
+                        <select
+                          value={item.role}
+                          onChange={(event) => updateMediaRole(item.id, event.target.value as MediaRole)}
+                        >
+                          <option value="single">single</option>
+                          <option value="multi">multi</option>
+                          <option value="reference">reference</option>
+                        </select>
+                      </label>
+
+                      <p className="hint">Tags: {item.tags.length > 0 ? item.tags.join(', ') : 'sin tags'}</p>
+                      {item.license && <p className="hint">Licencia: {item.license}</p>}
+
+                      <div className="row-actions">
+                        {resourceUrl && (
+                          <a href={resourceUrl} target="_blank" rel="noreferrer" className="link-button">
+                            Abrir recurso
+                          </a>
+                        )}
+                        {item.origin === 'external' && (
+                          <button type="button" className="danger" onClick={() => removeExternalMedia(item.id)}>
+                            Quitar externo
+                          </button>
+                        )}
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+            </article>
           </section>
         )}
 
         {activeTab === 'settings' && (
           <section className="panel-grid">
             <article className="panel full">
-              <h2>Ajustes y respaldo</h2>
+              <h2>Preferencias</h2>
               <label>
                 Unidad de peso
                 <select
@@ -1151,6 +1458,22 @@ function App() {
                   <option value="lb">lb</option>
                 </select>
               </label>
+
+              <label className="checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={settings.routineLockEnabled}
+                  onChange={(event) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      routineLockEnabled: event.target.checked,
+                    }))
+                  }
+                />
+                <span>Solicitar confirmacion al cambiar rutina activa en este dispositivo</span>
+              </label>
+
+              <p className="hint">Schema version: {settings.schemaVersion}</p>
             </article>
 
             <article className="panel full">
@@ -1167,7 +1490,6 @@ function App() {
                   Reset total
                 </button>
               </div>
-              <p className="hint">Schema version: {settings.schemaVersion}</p>
             </article>
           </section>
         )}

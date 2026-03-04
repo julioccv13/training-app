@@ -1,4 +1,4 @@
-import type { Exercise, WorkoutLog, WorkoutSet } from '../types/training'
+import type { RoutineDay, RoutineExercise, WorkoutLog, WorkoutSet } from '../types/training'
 
 export const createId = (prefix: string): string => {
   const rand = Math.random().toString(36).slice(2, 8)
@@ -20,7 +20,10 @@ export const toSlug = (value: string): string =>
     .toLowerCase()
     .replace(/\s+/g, '-')
 
-export const sortExercises = (exercises: Exercise[]): Exercise[] =>
+export const sortDays = (days: RoutineDay[]): RoutineDay[] =>
+  [...days].sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
+
+export const sortExercises = (exercises: RoutineExercise[]): RoutineExercise[] =>
   [...exercises].sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
 
 export const emptyWorkoutSet = (): WorkoutSet => ({
@@ -32,13 +35,14 @@ export const emptyWorkoutSet = (): WorkoutSet => ({
   done: false,
 })
 
-export const calcWeeklyVolume = (logs: WorkoutLog[]): number => {
+export const calcWeeklyVolume = (logs: WorkoutLog[], routineId?: string): number => {
   const today = new Date()
   const sevenDaysAgo = new Date(today)
   sevenDaysAgo.setDate(today.getDate() - 7)
 
   return logs
     .filter((log) => new Date(log.createdAt) >= sevenDaysAgo)
+    .filter((log) => (routineId ? log.routineId === routineId : true))
     .reduce((sum, log) => {
       const logVolume = log.sets.reduce((setSum, set) => setSum + set.weight * set.reps, 0)
       return sum + logVolume

@@ -1,83 +1,86 @@
 # Training App (PWA)
 
-PWA mobile-first para iPhone (Safari + Add to Home Screen) con rutina editable de 4 dias, registro local de entrenamiento y reproduccion de videos/imagenes.
+PWA mobile-first para iPhone (Safari + Add to Home Screen) con rutinas multiples, tracking por dia y biblioteca de media desacoplada del flujo de entrenamiento.
 
 ## Objetivo
-- Usar material multimedia desde `~/workspace/personal/docs/training app`
-- Mantener rutina editable (CRUD completo)
-- Guardar sets/reps/peso/RPE/notas en almacenamiento local del telefono
-- Desplegar gratis con GitHub Pages
+- Permitir varias rutinas en un mismo dispositivo.
+- Recordar la rutina activa del dispositivo y pedir confirmacion antes de cambiarla.
+- Registrar sets/reps/peso/RPE/descanso/notas por rutina y por dia.
+- Mantener media local y externa para consulta rapida.
 
 ## Stack
 - React 19 + Vite 7 + TypeScript
-- `vite-plugin-pwa` para manifest + service worker
-- `localStorage` para persistencia (sin backend)
+- `vite-plugin-pwa` (manifest + service worker)
+- `localStorage` (sin backend)
 
 ## Estructura principal
-- `src/types/`: contratos de dominio
-- `src/data/`: semilla de rutina y catalogo de media
-- `src/lib/`: utilidades de storage y helpers
-- `scripts/generate_media_catalog.py`: regenera catalogo de media desde `docs`
-- `public/media/`: videos e imagenes servidos estaticamente
-- `docs/`: arquitectura, operaciones y organizacion de media
+- `src/types/`: tipos de dominio (rutinas, logs, media)
+- `src/data/seedRoutine.ts`: semilla, migraciones y normalizacion de estado
+- `src/lib/`: helpers, storage y busqueda internet de media
+- `src/App.tsx`: flujo principal de UI
+- `public/media/`: media local versionada
+- `scripts/`: utilidades de mantenimiento
+- `docs/`: arquitectura y operacion
 
-## Requisitos
-- Node.js 24+
-- npm 11+
-
-## Instalacion
+## Instalar y correr
 ```bash
 npm install
-```
-
-## Desarrollo local
-```bash
 npm run dev
 ```
 
-## Calidad
+## Validacion
 ```bash
 npm run lint
 npm run build
 ```
 
-## Deploy a GitHub Pages
-1. Crear repo `julioccv13/training-app` (SSH).
-2. Push a `main`.
-3. En GitHub > Settings > Pages:
-   - Source: GitHub Actions.
-4. El workflow `.github/workflows/deploy-pages.yml` publica automaticamente en cada push a `main`.
+## Flujo de uso (app)
+1. En `Rutinas`, selecciona la rutina activa del dispositivo.
+2. Si cambias a otra rutina, la app pedira confirmacion (lock por dispositivo).
+3. Edita dias y ejercicios desde `Rutinas`.
+4. Registra entrenamiento en `Track` seleccionando dia.
+5. Consulta media en `Media` (local + internet).
 
-URL esperada:
-- `https://julioccv13.github.io/training-app/`
+## Bloqueo de rutina por dispositivo
+- La rutina activa se guarda en `localStorage`.
+- Al cambiarla, solicita confirmacion cuando el lock esta activo.
+- El lock se puede activar/desactivar en `Ajustes`.
 
-## Uso en iPhone
-1. Abrir la URL en Safari.
-2. Compartir > Add to Home Screen.
-3. Abrir desde el icono como app standalone.
+## Agregar rutinas desde codigo
+Archivo: `src/data/seedRoutine.ts`
 
-## Persistencia y backup
-- Keys de storage:
-  - `training_app:v1:routine`
-  - `training_app:v1:media`
-  - `training_app:v1:logs`
-  - `training_app:v1:settings`
-- Migracion:
-  - si existian datos con formato antiguo (`exerciseId` unico), se migran automaticamente a `exerciseIds[]`.
-- Desde Ajustes:
-  - Exportar JSON
-  - Importar JSON
-  - Reset total
+1. En `seedRoutineBundle.routines`, agrega una nueva rutina.
+2. En `seedRoutineBundle.days`, agrega dias con `routineId`.
+3. En `seedRoutineBundle.exercises`, agrega ejercicios con `routineId` y `dayId`.
+4. Ejecuta:
+```bash
+npm run lint
+npm run build
+```
+5. Commit + push para desplegar.
 
-## Notas sobre media
-- La fuente original esta en `~/workspace/personal/docs/training app/media`.
-- En el repo se publica copia en `public/media/`.
-- Duplicados exactos se mantienen en `videos/archive/duplicates` para trazabilidad.
-- Cada media tiene rol: `single`, `multi` o `reference`.
-- `single` se usa como guia principal por ejercicio.
-- `multi` se conserva como biblioteca y se puede asociar a varios ejercicios.
+## Crear/editar rutinas desde la app
+- `Rutinas > Crear rutina desde cero`.
+- Edita nombre/descripcion de la rutina activa.
+- Agrega/edita/elimina dias.
+- Agrega/edita/elimina ejercicios por dia.
 
-## Referencias
-- Arquitectura: `docs/ARCHITECTURE.md`
-- Operacion: `docs/OPERATIONS.md`
-- Organizacion media: `docs/MEDIA_ORGANIZATION.md`
+## Media: local + internet
+- Busqueda local por nombre/tags/proveedor/url.
+- Busqueda internet en Openverse + Wikimedia Commons.
+- Resultado externo se guarda como URL en biblioteca (sin descargar binario al navegador).
+
+## Dejar media externa permanente en el repo (pin manual)
+- Opcion manual por codigo: descargar el recurso y versionarlo en `public/media/`.
+- Luego agregar/actualizar metadatos en catalogo y publicar.
+- Recomendado documentar licencia y atribucion del recurso.
+
+## Backup
+Desde `Ajustes`:
+- Exportar JSON
+- Importar JSON
+- Reset total
+
+## Deploy GitHub Pages
+- Workflow: `.github/workflows/deploy-pages.yml`
+- URL: `https://julioccv13.github.io/training-app/`

@@ -1,17 +1,28 @@
 export type MediaType = 'image' | 'video'
 
-export type MediaStatus = 'assigned' | 'unassigned'
 export type MediaRole = 'single' | 'multi' | 'reference'
+export type MediaOrigin = 'local' | 'external'
 
-export interface TrainingDay {
+export interface Routine {
   id: string
+  name: string
+  description: string
+  createdAt: string
+  updatedAt: string
+  isArchived: boolean
+}
+
+export interface RoutineDay {
+  id: string
+  routineId: string
   name: string
   focus: string
   order: number
 }
 
-export interface Exercise {
+export interface RoutineExercise {
   id: string
+  routineId: string
   dayId: string
   slug: string
   name: string
@@ -22,7 +33,12 @@ export interface Exercise {
   restSeconds: number
   notes: string
   order: number
-  mediaIds: string[]
+}
+
+export interface RoutineBundle {
+  routines: Routine[]
+  days: RoutineDay[]
+  exercises: RoutineExercise[]
 }
 
 export interface MediaItem {
@@ -30,13 +46,18 @@ export interface MediaItem {
   title: string
   slug: string
   type: MediaType
-  path: string
   role: MediaRole
-  status: MediaStatus
-  exerciseIds: string[]
-  source: 'docs'
+  origin: MediaOrigin
+  provider: string
+  path: string | null
+  externalUrl: string | null
+  thumbnailUrl: string | null
+  license: string | null
+  attribution: string | null
+  tags: string[]
   isDuplicate: boolean
   checksum: string | null
+  createdAt: string
 }
 
 export interface WorkoutSet {
@@ -51,6 +72,8 @@ export interface WorkoutSet {
 export interface WorkoutLog {
   id: string
   createdAt: string
+  routineId: string
+  routineName: string
   dayId: string
   dayName: string
   exerciseId: string
@@ -62,15 +85,13 @@ export interface WorkoutLog {
 export interface AppSettings {
   units: 'kg' | 'lb'
   schemaVersion: number
-}
-
-export interface RoutineState {
-  days: TrainingDay[]
-  exercises: Exercise[]
+  selectedRoutineId: string | null
+  routineLockEnabled: boolean
+  routineLockConfirmedAt: string | null
 }
 
 export interface AppState {
-  routine: RoutineState
+  routineBundle: RoutineBundle
   media: MediaItem[]
   logs: WorkoutLog[]
   settings: AppSettings

@@ -1,52 +1,54 @@
 # Architecture
 
 ## Overview
-La app es una SPA/PWA con estado local en navegador, sin backend.
+SPA/PWA sin backend. Todo el estado se guarda localmente en el dispositivo.
 
 ## Core entities
-- `TrainingDay`: dia editable de rutina
-- `Exercise`: ejercicio editable, ligado a un dia
-- `MediaItem`: imagen/video con `role` y asignacion muchos-a-muchos con ejercicios
-- `WorkoutLog`: registro historico por ejercicio
-- `AppSettings`: unidad de peso y schema version
+- `Routine`: metadatos de rutina.
+- `RoutineDay`: dias por rutina.
+- `RoutineExercise`: ejercicios por dia y rutina.
+- `WorkoutLog`: historial de sesiones ligado a `routineId`.
+- `MediaItem`: biblioteca local/externa de imagenes y videos.
+- `AppSettings`: preferencias + lock de rutina por dispositivo.
 
 ## State model
-- `routine`: dias + ejercicios
-- `media`: catalogo de archivos y asignaciones
-- `logs`: historial de sesiones
-- `settings`: preferencias globales
+- `routineBundle`: `{ routines, days, exercises }`
+- `media`: catalogo de media local + externos por URL
+- `logs`: sesiones registradas
+- `settings`: unidades, schema y rutina activa
 
-Todos persistidos en `localStorage`.
+Persistencia en `localStorage` con keys:
+- `training_app:v1:routine`
+- `training_app:v1:media`
+- `training_app:v1:logs`
+- `training_app:v1:settings`
 
-## Data flow
-1. Carga inicial: storage -> semilla si no existe.
-2. Edicion de rutina/media/logs: actualiza estado React.
-3. Persistencia: efectos `useEffect` guardan en `localStorage`.
-4. Export/import: serializa/deserializa estado completo en JSON.
+## Device routine lock
+- La rutina activa se persiste en `settings.selectedRoutineId`.
+- Si `routineLockEnabled=true`, al cambiar rutina se exige confirmacion.
+- Esto evita mezclar tracking accidentalmente en el dispositivo.
 
-## Media strategy
-- Archivos estaticos servidos desde `public/media`.
-- URL final resuelta con `import.meta.env.BASE_URL` para compatibilidad GitHub Pages.
-- Videos con `playsInline` para Safari iOS.
-- Roles de media:
-  - `single`: guia principal de ejercicio.
-  - `multi`: biblioteca secundaria (compilados/circuitos/variaciones).
-  - `reference`: imagenes de apoyo.
-- Asignacion:
-  - cada `MediaItem` mantiene `exerciseIds[]` para asociarse a varios ejercicios.
-  - en vista de entrenamiento se prioriza `single`; `multi` se muestra como biblioteca relacionada.
+## Tracking flow
+1. Seleccionar rutina activa.
+2. Seleccionar dia de esa rutina.
+3. Registrar sets.
+4. Guardar log con `routineId/routineName/dayId/exerciseId`.
+
+## Media flow
+- Media no participa en el flujo de tracking.
+- Se consulta en pestaña `Media`.
+- Busqueda local por texto/filtros.
+- Busqueda internet via Openverse + Wikimedia.
+- Guardado externo como URL/metadatos.
 
 ## Compatibility and migration
-- Se mantiene la misma key de storage.
-- Datos antiguos con `exerciseId` se migran automaticamente a `exerciseIds[]`.
-- Se impone `schemaVersion=2` en settings para reflejar el modelo nuevo.
-
-## PWA
-- `vite-plugin-pwa` genera manifest + service worker.
-- Cache de assets estaticos relevantes (incluyendo mp4 bajo limite de tamano).
-- Modo de registro: `autoUpdate`.
+- `schemaVersion=3`.
+- Migracion soportada:
+  - modelo antiguo de una rutina (`days/exercises`) -> `routineBundle` con `routine-default`
+  - logs antiguos sin `routineId` -> asignados a rutina detectada/default
+  - settings antiguos -> se completan campos nuevos de lock
 
 ## Constraints
-- Sin sincronizacion nube.
-- Datos dependen del almacenamiento del dispositivo.
-- Cambiar de navegador/dispositivo requiere backup manual (export/import).
+- Sin sincronizacion cloud.
+- Estado por navegador/dispositivo.
+- Media externa depende de disponibilidad del proveedor.
