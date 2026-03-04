@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-03-04 (e1RM update)
+- Added dynamic e1RM estimation per exercise from routine logs using Brzycki equation.
+- Added robust e1RM aggregation (median of recent valid sets, 1-10 reps, minimum 3 samples).
+- Added suggested target load projection from e1RM and target reps.
+- Added UI actions to apply suggested load into exercise `targetWeight`.
+- Added automatic `targetWeight` update on session save using current e1RM suggestions.
+- Updated README, CLAUDE, AGENTS, and docs for e1RM behavior and validation.
+
 ## 2026-03-04
 - Added multi-routine architecture (`routines/days/exercises`) with migration support.
 - Added device-level active routine persistence and confirmation lock on routine switch.

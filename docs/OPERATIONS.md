@@ -20,6 +20,8 @@ Push a `main` dispara `.github/workflows/deploy-pages.yml`.
 - Selector de rutina funciona.
 - Cambio de rutina pide confirmacion (si lock activo).
 - Tracking guarda logs en rutina activa.
+- e1RM aparece por ejercicio despues de 3+ sets validos (1-10 reps).
+- Al guardar sesion, `targetWeight` se actualiza automaticamente en ejercicios elegibles.
 - Media local y externa se visualiza.
 
 ## Add routine from code
@@ -42,6 +44,7 @@ Pestaña `Rutinas`:
 - Crear rutina desde cero.
 - Agregar/editar/eliminar dias.
 - Agregar/editar/eliminar ejercicios.
+- El ajuste de `targetWeight` por e1RM ocurre automatico al guardar una sesion en `Track`.
 
 ## Media update
 - Local: sync + regenerate catalog.

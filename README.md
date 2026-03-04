@@ -41,6 +41,15 @@ npm run build
 4. Registra entrenamiento en `Track` seleccionando dia.
 5. Consulta media en `Media` (local + internet).
 
+## Objetivos dinamicos con e1RM
+- La app calcula e1RM por ejercicio desde logs de la rutina activa.
+- Formula base implementada (Brzycki): `1RM = peso / (1.0278 - 0.0278 * reps)`.
+- Solo considera sets validos de `1` a `10` reps.
+- Requiere al menos `3` sets validos para mostrar una estimacion estable.
+- Usa mediana de hasta los `12` sets validos mas recientes para robustez.
+- Con ese e1RM estima peso sugerido para el ejercicio segun `targetReps` (primer numero), redondeado por unidad (`kg=0.5`, `lb=1`).
+- Al guardar sesion (`Track > Guardar sesion del dia`), la app actualiza automaticamente `targetWeight` con el peso sugerido para los ejercicios del dia que tengan datos suficientes.
+
 ## Bloqueo de rutina por dispositivo
 - La rutina activa se guarda en `localStorage`.
 - Al cambiarla, solicita confirmacion cuando el lock esta activo.

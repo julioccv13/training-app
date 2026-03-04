@@ -25,6 +25,8 @@ Personal training PWA with multi-routine tracking and device-level active-routin
 - Routine switch requests confirmation when lock is enabled
 - Tracking flow is routine -> day -> sets
 - Media is query-only support (not coupled to workout steps)
+- Dynamic objective support via e1RM (Brzycki) from historical sets
+- On workout save, target weight is auto-updated when enough valid e1RM data exists
 
 ## Commands
 ```bash
@@ -38,5 +40,7 @@ npm run build
 - routine switch confirmation behavior
 - routine/day CRUD and tracking integrity
 - logs separation by routine
+- e1RM estimation appears only with enough valid data (>=3 sets, 1-10 reps)
+- saving workout auto-updates `targetWeight` from suggested e1RM load when eligible
 - media local search
 - internet media search + save URL into library

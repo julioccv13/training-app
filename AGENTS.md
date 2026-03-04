@@ -9,6 +9,8 @@ PWA de entrenamiento para iPhone con:
 - Rutinas multiples seleccionables en dispositivo
 - Confirmacion al cambiar rutina activa (device lock)
 - Tracking por rutina y por dia
+- Objetivos dinamicos por ejercicio basados en e1RM (Brzycki)
+- Auto-actualizacion de `targetWeight` al guardar sesion (si hay datos validos)
 - Biblioteca media desacoplada del tracking
 - Busqueda local + busqueda internet de media (URLs externas)
 
@@ -26,6 +28,7 @@ PWA de entrenamiento para iPhone con:
 ## Maintenance
 - Add routines from code in `src/data/seedRoutine.ts`
 - Edit/create routines from app tab `Rutinas`
+- e1RM dinamico: revisar logica en `src/lib/helpers.ts` y uso en `src/App.tsx`
 - Media local sync + catalog generation via `scripts/generate_media_catalog.py`
 
 ## Deploy
@@ -36,4 +39,6 @@ PWA de entrenamiento para iPhone con:
 - `npm run build`
 - Verify routine lock confirmation on routine switch
 - Verify logs are partitioned by routine
+- Verify e1RM appears with >=3 valid sets and suggested load can be applied
+- Verify save session auto-updates objective weight when e1RM data is sufficient
 - Verify media internet search and save URL flow

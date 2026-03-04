@@ -11,7 +11,20 @@ import {
   seedSettings,
   STORAGE_KEYS,
 } from './data/seedRoutine'
-import { calcWeeklyVolume, createId, emptyWorkoutSet, sortDays, sortExercises, toSlug, toTitle } from './lib/helpers'
+import {
+  calcWeeklyVolume,
+  createId,
+  emptyWorkoutSet,
+  estimateE1rmBrzycki,
+  median,
+  parseRepTargetAnchor,
+  projectLoadFromE1rmBrzycki,
+  roundTrainingLoad,
+  sortDays,
+  sortExercises,
+  toSlug,
+  toTitle,
+} from './lib/helpers'
 import { searchInternetMedia, type InternetMediaResult } from './lib/mediaSearch'
 import { downloadJson, loadJson, readJsonFile, saveJson } from './lib/storage'
 import type {
@@ -31,6 +44,12 @@ type TabKey = 'dashboard' | 'routines' | 'workout' | 'media' | 'settings'
 type WorkoutDraft = Record<string, { sets: WorkoutSet[]; notes: string }>
 type MediaTypeFilter = 'all' | MediaType
 type MediaOriginFilter = 'all' | 'local' | 'external'
+type ExerciseE1rmMeta = {
+  e1rm: number
+  sampleCount: number
+  anchorReps: number | null
+  suggestedWeight: number | null
+}
 
 type ImportPayload = {
   routineBundle?: unknown
@@ -47,6 +66,60 @@ const tabs: Array<{ key: TabKey; label: string }> = [
   { key: 'media', label: 'Media' },
   { key: 'settings', label: 'Ajustes' },
 ]
+
+const MIN_E1RM_SAMPLES = 3
+
+const buildE1rmMetaByExercise = (
+  routineLogs: WorkoutLog[],
+  routineExercises: RoutineExercise[],
+  units: 'kg' | 'lb',
+): Map<string, ExerciseE1rmMeta> => {
+  const rawSamplesByExercise = new Map<string, number[]>()
+  const logsSortedByDate = [...routineLogs].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  )
+
+  logsSortedByDate.forEach((log) => {
+    log.sets.forEach((set) => {
+      const estimated = estimateE1rmBrzycki(set.weight, set.reps)
+      if (!estimated) {
+        return
+      }
+
+      const current = rawSamplesByExercise.get(log.exerciseId) ?? []
+      current.push(estimated)
+      rawSamplesByExercise.set(log.exerciseId, current)
+    })
+  })
+
+  const result = new Map<string, ExerciseE1rmMeta>()
+  routineExercises.forEach((exercise) => {
+    const samples = rawSamplesByExercise.get(exercise.id) ?? []
+    const sampleCount = samples.length
+    if (sampleCount === 0) {
+      return
+    }
+
+    const stableWindow = samples.slice(0, 12)
+    const e1rm = median(stableWindow)
+    if (!e1rm) {
+      return
+    }
+
+    const anchorReps = parseRepTargetAnchor(exercise.targetReps)
+    const projected = anchorReps ? projectLoadFromE1rmBrzycki(e1rm, anchorReps) : null
+    const suggestedWeight = projected ? roundTrainingLoad(projected, units) : null
+
+    result.set(exercise.id, {
+      e1rm,
+      sampleCount,
+      anchorReps,
+      suggestedWeight,
+    })
+  })
+
+  return result
+}
 
 const resolveMediaPath = (path: string | null): string | null => {
   if (!path) {
@@ -459,6 +532,17 @@ function App() {
     }))
   }
 
+  const applySuggestedTargetWeight = (exercise: RoutineExercise): void => {
+    const meta = e1rmByExercise.get(exercise.id)
+    if (!meta || meta.sampleCount < MIN_E1RM_SAMPLES || !meta.suggestedWeight) {
+      setUiMessage('Faltan datos para sugerir un peso objetivo estable en este ejercicio.')
+      return
+    }
+
+    updateExercise(exercise.id, { targetWeight: meta.suggestedWeight })
+    setUiMessage(`Objetivo de ${exercise.name} actualizado a ${meta.suggestedWeight} ${settings.units} (e1RM).`)
+  }
+
   const deleteExercise = (exerciseId: string): void => {
     if (!window.confirm('Eliminar ejercicio?')) {
       return
@@ -632,7 +716,34 @@ function App() {
       return
     }
 
-    setLogs((prev) => [...entries, ...prev])
+    const nextLogs = [...entries, ...logs]
+    setLogs(nextLogs)
+
+    const nextRoutineLogs = nextLogs.filter((log) => log.routineId === activeRoutine.id)
+    const nextE1rmByExercise = buildE1rmMetaByExercise(nextRoutineLogs, allExercisesForActiveRoutine, settings.units)
+    const suggestedWeightByExerciseId = new Map<string, number>()
+
+    trackExercises.forEach((exercise) => {
+      const meta = nextE1rmByExercise.get(exercise.id)
+      if (!meta || meta.sampleCount < MIN_E1RM_SAMPLES || meta.suggestedWeight === null) {
+        return
+      }
+      suggestedWeightByExerciseId.set(exercise.id, meta.suggestedWeight)
+    })
+
+    if (suggestedWeightByExerciseId.size > 0) {
+      updateRoutineBundle((current) => ({
+        ...current,
+        exercises: current.exercises.map((exercise) =>
+          suggestedWeightByExerciseId.has(exercise.id)
+            ? {
+                ...exercise,
+                targetWeight: suggestedWeightByExerciseId.get(exercise.id) ?? exercise.targetWeight,
+              }
+            : exercise,
+        ),
+      }))
+    }
 
     setWorkoutDraft((prev) => {
       const next = { ...prev }
@@ -645,7 +756,12 @@ function App() {
       return next
     })
 
-    setUiMessage(`Sesion guardada: ${entries.length} ejercicios registrados en ${activeRoutine.name}.`)
+    const autoUpdated = suggestedWeightByExerciseId.size
+    const suffix =
+      autoUpdated > 0
+        ? ` Objetivos actualizados automaticamente por e1RM en ${autoUpdated} ejercicios.`
+        : ' No hubo actualizacion automatica de objetivos (faltan datos o reps objetivo fuera de 1-10).'
+    setUiMessage(`Sesion guardada: ${entries.length} ejercicios registrados en ${activeRoutine.name}.${suffix}`)
   }
 
   const updateMediaRole = (mediaId: string, role: MediaRole): void => {
@@ -745,6 +861,19 @@ function App() {
   const logsForActiveRoutine = useMemo(
     () => logs.filter((log) => log.routineId === activeRoutineId),
     [logs, activeRoutineId],
+  )
+
+  const e1rmByExercise = useMemo(() => {
+    return buildE1rmMetaByExercise(logsForActiveRoutine, allExercisesForActiveRoutine, settings.units)
+  }, [logsForActiveRoutine, allExercisesForActiveRoutine, settings.units])
+
+  const e1rmReadyExerciseCount = useMemo(
+    () =>
+      allExercisesForActiveRoutine.filter((exercise) => {
+        const meta = e1rmByExercise.get(exercise.id)
+        return Boolean(meta && meta.sampleCount >= MIN_E1RM_SAMPLES)
+      }).length,
+    [allExercisesForActiveRoutine, e1rmByExercise],
   )
 
   const weeklyVolume = useMemo(
@@ -888,6 +1017,7 @@ function App() {
               <h2>Tracking</h2>
               <p>{logsForActiveRoutine.length} registros en rutina activa</p>
               <p>{Math.round(weeklyVolume)} volumen ultimos 7 dias ({settings.units})</p>
+              <p>e1RM disponible en {e1rmReadyExerciseCount}/{allExercisesForActiveRoutine.length} ejercicios</p>
               <p>Lock rutina por dispositivo: {settings.routineLockEnabled ? 'Activo' : 'Inactivo'}</p>
             </article>
 
@@ -1076,80 +1206,106 @@ function App() {
               </div>
 
               <div className="exercise-list">
-                {editorExercises.map((exercise, index) => (
-                  <article key={exercise.id} className="exercise-card">
-                    <div className="exercise-head">
-                      <h3>
-                        {index + 1}. {exercise.name}
-                      </h3>
-                      <div className="row-actions">
-                        <button type="button" onClick={() => moveExercise(exercise.id, 'up')}>
-                          Subir
-                        </button>
-                        <button type="button" onClick={() => moveExercise(exercise.id, 'down')}>
-                          Bajar
-                        </button>
-                        <button type="button" className="danger" onClick={() => deleteExercise(exercise.id)}>
-                          Eliminar
-                        </button>
+                {editorExercises.map((exercise, index) => {
+                  const e1rmMeta = e1rmByExercise.get(exercise.id)
+                  const hasStableE1rm = Boolean(e1rmMeta && e1rmMeta.sampleCount >= MIN_E1RM_SAMPLES)
+
+                  return (
+                    <article key={exercise.id} className="exercise-card">
+                      <div className="exercise-head">
+                        <h3>
+                          {index + 1}. {exercise.name}
+                        </h3>
+                        <div className="row-actions">
+                          <button type="button" onClick={() => moveExercise(exercise.id, 'up')}>
+                            Subir
+                          </button>
+                          <button type="button" onClick={() => moveExercise(exercise.id, 'down')}>
+                            Bajar
+                          </button>
+                          <button type="button" className="danger" onClick={() => deleteExercise(exercise.id)}>
+                            Eliminar
+                          </button>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="grid-two">
-                      <label>
-                        Nombre
-                        <input
-                          value={exercise.name}
-                          onChange={(event) => updateExercise(exercise.id, { name: event.target.value })}
-                        />
-                      </label>
-                      <label>
-                        Grupo
-                        <input
-                          value={exercise.muscleGroup}
-                          onChange={(event) => updateExercise(exercise.id, { muscleGroup: event.target.value })}
-                        />
-                      </label>
-                      <label>
-                        Sets objetivo
-                        <input
-                          type="number"
-                          min={1}
-                          value={exercise.targetSets}
-                          onChange={(event) =>
-                            updateExercise(exercise.id, { targetSets: Math.max(1, Number(event.target.value) || 1) })
-                          }
-                        />
-                      </label>
-                      <label>
-                        Reps objetivo
-                        <input
-                          value={exercise.targetReps}
-                          onChange={(event) => updateExercise(exercise.id, { targetReps: event.target.value })}
-                        />
-                      </label>
-                      <label>
-                        Peso objetivo ({settings.units})
-                        <input
-                          type="number"
-                          min={0}
-                          value={exercise.targetWeight}
-                          onChange={(event) =>
-                            updateExercise(exercise.id, { targetWeight: Math.max(0, Number(event.target.value) || 0) })
-                          }
-                        />
-                      </label>
-                    </div>
+                      <div className="grid-two">
+                        <label>
+                          Nombre
+                          <input
+                            value={exercise.name}
+                            onChange={(event) => updateExercise(exercise.id, { name: event.target.value })}
+                          />
+                        </label>
+                        <label>
+                          Grupo
+                          <input
+                            value={exercise.muscleGroup}
+                            onChange={(event) => updateExercise(exercise.id, { muscleGroup: event.target.value })}
+                          />
+                        </label>
+                        <label>
+                          Sets objetivo
+                          <input
+                            type="number"
+                            min={1}
+                            value={exercise.targetSets}
+                            onChange={(event) =>
+                              updateExercise(exercise.id, { targetSets: Math.max(1, Number(event.target.value) || 1) })
+                            }
+                          />
+                        </label>
+                        <label>
+                          Reps objetivo
+                          <input
+                            value={exercise.targetReps}
+                            onChange={(event) => updateExercise(exercise.id, { targetReps: event.target.value })}
+                          />
+                        </label>
+                        <label>
+                          Peso objetivo ({settings.units})
+                          <input
+                            type="number"
+                            min={0}
+                            value={exercise.targetWeight}
+                            onChange={(event) =>
+                              updateExercise(exercise.id, { targetWeight: Math.max(0, Number(event.target.value) || 0) })
+                            }
+                          />
+                        </label>
+                      </div>
 
-                    <label>
-                      Notas
-                      <textarea
-                        value={exercise.notes}
-                        onChange={(event) => updateExercise(exercise.id, { notes: event.target.value })}
-                      />
-                    </label>
-                  </article>
-                ))}
+                      {hasStableE1rm ? (
+                        <div className="hint">
+                          e1RM estimado: {e1rmMeta?.e1rm.toFixed(1)} {settings.units} ({e1rmMeta?.sampleCount} sets validos).
+                          {e1rmMeta?.suggestedWeight && e1rmMeta.anchorReps
+                            ? ` Sugerencia: ${e1rmMeta.suggestedWeight} ${settings.units} para ${e1rmMeta.anchorReps} reps.`
+                            : ' Sin sugerencia de carga: usa objetivo de reps dentro de 1-10 para este metodo.'}
+                        </div>
+                      ) : (
+                        <p className="hint">
+                          e1RM: faltan datos (minimo {MIN_E1RM_SAMPLES} sets validos entre 1 y 10 reps).
+                        </p>
+                      )}
+
+                      {hasStableE1rm && e1rmMeta?.suggestedWeight ? (
+                        <div className="row-actions">
+                          <button type="button" onClick={() => applySuggestedTargetWeight(exercise)}>
+                            Usar peso sugerido e1RM
+                          </button>
+                        </div>
+                      ) : null}
+
+                      <label>
+                        Notas
+                        <textarea
+                          value={exercise.notes}
+                          onChange={(event) => updateExercise(exercise.id, { notes: event.target.value })}
+                        />
+                      </label>
+                    </article>
+                  )
+                })}
               </div>
             </article>
           </section>
@@ -1188,6 +1344,8 @@ function App() {
 
             {trackExercises.map((exercise) => {
               const draft = workoutDraft[exercise.id]
+              const e1rmMeta = e1rmByExercise.get(exercise.id)
+              const hasStableE1rm = Boolean(e1rmMeta && e1rmMeta.sampleCount >= MIN_E1RM_SAMPLES)
 
               return (
                 <article key={exercise.id} className="panel full exercise-session">
@@ -1197,6 +1355,25 @@ function App() {
                       Objetivo: {exercise.targetSets}x{exercise.targetReps} - {exercise.targetWeight} {settings.units}
                     </p>
                   </div>
+
+                  {hasStableE1rm ? (
+                    <p className="hint">
+                      e1RM: {e1rmMeta?.e1rm.toFixed(1)} {settings.units} ({e1rmMeta?.sampleCount} sets validos).
+                      {e1rmMeta?.suggestedWeight && e1rmMeta.anchorReps
+                        ? ` Peso sugerido: ${e1rmMeta.suggestedWeight} ${settings.units} para ${e1rmMeta.anchorReps} reps.`
+                        : ' Sin sugerencia de carga por objetivo de reps fuera de 1-10.'}
+                    </p>
+                  ) : (
+                    <p className="hint">e1RM dinamico disponible cuando registres al menos 3 sets validos (1-10 reps).</p>
+                  )}
+
+                  {hasStableE1rm && e1rmMeta?.suggestedWeight ? (
+                    <div className="row-actions">
+                      <button type="button" onClick={() => applySuggestedTargetWeight(exercise)}>
+                        Aplicar peso sugerido
+                      </button>
+                    </div>
+                  ) : null}
 
                   <div className="sets-table-wrap">
                     <table className="sets-table">

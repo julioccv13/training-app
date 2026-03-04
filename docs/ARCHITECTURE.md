@@ -34,6 +34,18 @@ Persistencia en `localStorage` con keys:
 3. Registrar sets.
 4. Guardar log con `routineId/routineName/dayId/exerciseId`.
 
+## Dynamic objective (e1RM)
+- Se estima e1RM por ejercicio con formula Brzycki:
+  - `1RM = peso / (1.0278 - 0.0278 * reps)`
+- Fuente de datos: logs de la rutina activa.
+- Filtro de validez: solo sets con reps entre `1` y `10` y peso > 0.
+- Estabilidad: mediana de hasta 12 sets validos recientes, minimo 3 sets.
+- Proyeccion de objetivo:
+  - se toma el primer numero de `targetReps` como ancla
+  - se estima peso: `peso = e1RM * (1.0278 - 0.0278 * repsAncla)`
+  - se redondea por unidad (`kg=0.5`, `lb=1`)
+- Aplicacion del objetivo sugerido: automatica al guardar sesion (para ejercicios del dia con datos suficientes).
+
 ## Media flow
 - Media no participa en el flujo de tracking.
 - Se consulta en pestaña `Media`.
@@ -52,3 +64,4 @@ Persistencia en `localStorage` con keys:
 - Sin sincronizacion cloud.
 - Estado por navegador/dispositivo.
 - Media externa depende de disponibilidad del proveedor.
+- e1RM fuera de 1-10 reps no se estima en esta version.
