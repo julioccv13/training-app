@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Public+Sans:wght@400;600;700;800&display=swap');
+
+:root {
+  font-family: 'Public Sans', 'Segoe UI', sans-serif;
+  line-height: 1.4;
+  font-weight: 400;
+  color: #121c24;
+  background-color: #e8eef2;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+.tab,
+.badge {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.02em;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}

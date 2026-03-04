@@ -1,0 +1,349 @@
+{
+  "generated_at": "2026-03-03T23:15:52.702364",
+  "source": "/home/julio/workspace/personal/docs/training app",
+  "images_total": 8,
+  "videos_total": 33,
+  "unique_videos": 28,
+  "duplicate_videos": 5,
+  "images": [
+    {
+      "id": "ref-image-01",
+      "file": "media/images/reference/reference_01.jpeg",
+      "original_name": "WhatsApp Image 2026-03-03 at 21.55.42.jpeg"
+    },
+    {
+      "id": "ref-image-02",
+      "file": "media/images/reference/reference_02.jpeg",
+      "original_name": "WhatsApp Image 2026-03-03 at 21.56.24.jpeg"
+    },
+    {
+      "id": "ref-image-03",
+      "file": "media/images/reference/reference_03.jpeg",
+      "original_name": "WhatsApp Image 2026-03-03 at 21.56.241.jpeg"
+    },
+    {
+      "id": "ref-image-04",
+      "file": "media/images/reference/reference_04.jpeg",
+      "original_name": "WhatsApp Image 2026-03-03 at 21.56.25 (1).jpeg"
+    },
+    {
+      "id": "ref-image-05",
+      "file": "media/images/reference/reference_05.jpeg",
+      "original_name": "WhatsApp Image 2026-03-03 at 21.56.25 (2).jpeg"
+    },
+    {
+      "id": "ref-image-06",
+      "file": "media/images/reference/reference_06.jpeg",
+      "original_name": "WhatsApp Image 2026-03-03 at 21.56.25 (3).jpeg"
+    },
+    {
+      "id": "ref-image-07",
+      "file": "media/images/reference/reference_07.jpeg",
+      "original_name": "WhatsApp Image 2026-03-03 at 21.56.25.jpeg"
+    },
+    {
+      "id": "ref-image-08",
+      "file": "media/images/reference/reference_08.jpeg",
+      "original_name": "WhatsApp Image 2026-03-03 at 21.56.26.jpeg"
+    }
+  ],
+  "videos": [
+    {
+      "id": "video-01",
+      "file": "media/videos/exercises/01_hip-thrust.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.16.mp4",
+      "sha256": "63c83968ecc1d9baca18e593cc8fe4f02ebc80d15e9eb64a0d89642f9c706f8a",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "hip-thrust"
+    },
+    {
+      "id": "video-02",
+      "file": "media/videos/exercises/02_bulgaras.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.17 (1).mp4",
+      "sha256": "d27c12ec680e833c9f94a6155966ebc2931cd6d2416b0e0adfa078a3ba5d1c13",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "bulgaras"
+    },
+    {
+      "id": "video-03",
+      "file": "media/videos/exercises/03_sentadilla-profunda.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.17 (2).mp4",
+      "sha256": "42e1a9d6c7a3e62602f2db3bd46febed0e552110abc5898d0a7e09ef58aee23c",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "sentadilla-profunda"
+    },
+    {
+      "id": "video-04",
+      "file": "media/videos/exercises/04_maquina-aductores.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.17 (3).mp4",
+      "sha256": "c9b1222175189e2ceb83251564add73e3de5991e62335821d4006ea6d38a0c6b",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "maquina-aductores"
+    },
+    {
+      "id": "video-05",
+      "file": "media/videos/exercises/05_copenhagen-adduction.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.17.mp4",
+      "sha256": "4f8f2c09dc1dfd76427316587b1743180e41ea14d40f499002cd939e2c6df214",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "copenhagen-adduction"
+    },
+    {
+      "id": "video-06",
+      "file": "media/videos/exercises/06_extension-cuadriceps.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.18 (1).mp4",
+      "sha256": "ff53838e12655bdae2a7b0c944201daa27b5816eba6c427280eff4a8be91026f",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "extension-cuadriceps"
+    },
+    {
+      "id": "video-07",
+      "file": "media/videos/exercises/07_prensa.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.18 (2).mp4",
+      "sha256": "1a220a0d6bd8636d9f07e2cde66ebfcff294ddfbb9cd2bcea8c7cda5f7f57e0a",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "prensa"
+    },
+    {
+      "id": "video-08",
+      "file": "media/videos/exercises/08_zancadas.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.18 (3).mp4",
+      "sha256": "13802a61e606bb0b6a00484c5cd19465733e1c8a8d0f0d4ce12e7af6c7069261",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "zancadas"
+    },
+    {
+      "id": "video-09",
+      "file": "media/videos/exercises/09_peso-muerto-rumano.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.18.mp4",
+      "sha256": "5cad154a79d7fb8ecb7de5ac77a126d379a38b170cd319ee817fdaf23cfdb4ef",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "peso-muerto-rumano"
+    },
+    {
+      "id": "video-10",
+      "file": "media/videos/exercises/10_curl-femoral.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.19 (1).mp4",
+      "sha256": "4c7d0279d6cd16c32d5a1e15caefaff1f81a70fda2f4f8e2cb0ca61bce550952",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "curl-femoral"
+    },
+    {
+      "id": "video-11",
+      "file": "media/videos/exercises/11_peso-muerto.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.19 (2).mp4",
+      "sha256": "74b8cb8d3928608ac70e05b7383b523fd820bda95629a03e518a9a854d9e9249",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "peso-muerto"
+    },
+    {
+      "id": "video-12",
+      "file": "media/videos/exercises/12_extension-gemelos-de-pie.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.19 (3).mp4",
+      "sha256": "944aee7489b5470fe769b7f8956f998f0d77dc8a9a14297d1bbcd04b17e676cd",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "extension-gemelos-de-pie"
+    },
+    {
+      "id": "video-13",
+      "file": "media/videos/exercises/13_extension-gemelos-sentado.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.19 (4).mp4",
+      "sha256": "accb03d6e578f9dafce0dd686ef99404c9541b313303d28b7f2bd70298aa0019",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "extension-gemelos-sentado"
+    },
+    {
+      "id": "video-14",
+      "file": "media/videos/exercises/14_elevaciones-tibiales.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.19.mp4",
+      "sha256": "d1fff7303b381da512f4ab05a2fa2ba24f6b979dc72eb1abec349ec37c0295a2",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "elevaciones-tibiales"
+    },
+    {
+      "id": "video-15",
+      "file": "media/videos/exercises/15_marcha-talon.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.20 (1).mp4",
+      "sha256": "7e51fb2328bc3817cc418b03c33ba9e6e3b09839dc206695171c711870a2bf23",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "marcha-talon"
+    },
+    {
+      "id": "video-16",
+      "file": "media/videos/exercises/16_encogimientos.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.20 (2).mp4",
+      "sha256": "f725221a82533679aa641932dd19172d93d32284864b6d37b21f97cdbe5331f7",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "encogimientos"
+    },
+    {
+      "id": "video-17",
+      "file": "media/videos/exercises/17_aperturas.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.20 (3).mp4",
+      "sha256": "ddb7e17042d2a1fc581acf51e89702b9b855feac9e16947acaa3a90d806224d3",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "aperturas"
+    },
+    {
+      "id": "video-18",
+      "file": "media/videos/exercises/18_face-pull.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.20.mp4",
+      "sha256": "8fb3540354e52a86bc9a98dc7634a1645cae61d253c24fb21e627ff8f98e276d",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "face-pull"
+    },
+    {
+      "id": "video-19",
+      "file": "media/videos/archive/duplicates/dup_19_remo-en-t.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.21 (1).mp4",
+      "sha256": "8fb3540354e52a86bc9a98dc7634a1645cae61d253c24fb21e627ff8f98e276d",
+      "is_duplicate": true,
+      "canonical_of": "video-18",
+      "exercise_slug": "remo-en-t"
+    },
+    {
+      "id": "video-20",
+      "file": "media/videos/exercises/20_remo-inclinado.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.21 (2).mp4",
+      "sha256": "82d664eeb6a60d96e8cc3c1e576405375c8cb9bd33191493186ca70989ed6ffb",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "remo-inclinado"
+    },
+    {
+      "id": "video-21",
+      "file": "media/videos/archive/duplicates/dup_21_face-pull-rotacion-externa.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.21 (3).mp4",
+      "sha256": "ff53838e12655bdae2a7b0c944201daa27b5816eba6c427280eff4a8be91026f",
+      "is_duplicate": true,
+      "canonical_of": "video-06",
+      "exercise_slug": "face-pull-rotacion-externa"
+    },
+    {
+      "id": "video-22",
+      "file": "media/videos/exercises/22_rotacion-externa-acostado.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.21.mp4",
+      "sha256": "2d89b3043e914b824a7978a8d952b40b03d68962a7115b9595e31a339a4c20de",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "rotacion-externa-acostado"
+    },
+    {
+      "id": "video-23",
+      "file": "media/videos/exercises/23_jalon-al-pecho.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.22 (1).mp4",
+      "sha256": "c17e913dc03d60613c9b35fdbe776a63c1ab22f5b27bb19fb9c3a2854bf7a18a",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "jalon-al-pecho"
+    },
+    {
+      "id": "video-24",
+      "file": "media/videos/exercises/24_remo-con-mancuernas.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.22 (2).mp4",
+      "sha256": "5d9954ce3846bda0541e9d953b7c89f4a4c7247269c57edd7086de026f0baa0d",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "remo-con-mancuernas"
+    },
+    {
+      "id": "video-25",
+      "file": "media/videos/exercises/25_hiperextensiones.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.22 (3).mp4",
+      "sha256": "ca5d8f18ef13624d8263886e467ee44154f8799c7d3cad9cf6a6ee67ddc7a3bd",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "hiperextensiones"
+    },
+    {
+      "id": "video-26",
+      "file": "media/videos/exercises/26_rack-pull.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.22.mp4",
+      "sha256": "5c93e86411f183ebc7e7bf6f22600c2fe68108aec51950723f63ce2f66d1fca5",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "rack-pull"
+    },
+    {
+      "id": "video-27",
+      "file": "media/videos/archive/duplicates/dup_27_dominadas.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.23 (1).mp4",
+      "sha256": "4c7d0279d6cd16c32d5a1e15caefaff1f81a70fda2f4f8e2cb0ca61bce550952",
+      "is_duplicate": true,
+      "canonical_of": "video-10",
+      "exercise_slug": "dominadas"
+    },
+    {
+      "id": "video-28",
+      "file": "media/videos/exercises/28_jalon-al-pecho-2.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.23 (2).mp4",
+      "sha256": "96c18d2fddadc733374d2b36489c1eaef53fccd98dfe5bce085b5a4abc6865ff",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "jalon-al-pecho-2"
+    },
+    {
+      "id": "video-29",
+      "file": "media/videos/exercises/29_peso-muerto-2.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.23 (3).mp4",
+      "sha256": "c782105052155aece33e1cb2b7e061b1938a5b736adabc50de5f209bd79073f5",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "peso-muerto-2"
+    },
+    {
+      "id": "video-30",
+      "file": "media/videos/exercises/30_remo-en-t-2.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.23.mp4",
+      "sha256": "b0d732fa0f5e2ddbddf55ae1d2c7051279659afa585049ce79e1d4185136124c",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "remo-en-t-2"
+    },
+    {
+      "id": "video-31",
+      "file": "media/videos/exercises/31_face-pull-2.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.24 (1).mp4",
+      "sha256": "3e214c03aa53533f3085af16e65a5346b2438c0c8d606bc0b948f3ada77b8be0",
+      "is_duplicate": false,
+      "canonical_of": null,
+      "exercise_slug": "face-pull-2"
+    },
+    {
+      "id": "video-32",
+      "file": "media/videos/archive/duplicates/dup_32_zancadas-2.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.24 (2).mp4",
+      "sha256": "2d89b3043e914b824a7978a8d952b40b03d68962a7115b9595e31a339a4c20de",
+      "is_duplicate": true,
+      "canonical_of": "video-22",
+      "exercise_slug": "zancadas-2"
+    },
+    {
+      "id": "video-33",
+      "file": "media/videos/archive/duplicates/dup_33_prensa-2.mp4",
+      "original_name": "WhatsApp Video 2026-03-03 at 21.55.24.mp4",
+      "sha256": "4f8f2c09dc1dfd76427316587b1743180e41ea14d40f499002cd939e2c6df214",
+      "is_duplicate": true,
+      "canonical_of": "video-05",
+      "exercise_slug": "prensa-2"
+    }
+  ]
+}
