@@ -691,7 +691,7 @@ function App() {
         return
       }
 
-      const relevantSets = draft.sets.filter((set) => set.done || set.reps > 0 || set.weight > 0 || set.rpe > 0)
+      const relevantSets = draft.sets.filter((set) => set.done || set.reps > 0 || set.weight > 0)
 
       if (relevantSets.length === 0 && !draft.notes.trim()) {
         return
@@ -1382,7 +1382,6 @@ function App() {
                           <th>Set</th>
                           <th>Reps</th>
                           <th>Peso</th>
-                          <th>RPE</th>
                           <th>OK</th>
                           <th></th>
                         </tr>
@@ -1405,15 +1404,6 @@ function App() {
                                 min={0}
                                 value={set.weight}
                                 onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'weight', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="number"
-                                min={0}
-                                max={10}
-                                value={set.rpe}
-                                onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'rpe', event.target.value)}
                               />
                             </td>
                             <td>
