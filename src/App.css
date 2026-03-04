@@ -575,6 +575,44 @@ button:disabled {
 }
 
 @media (max-width: 640px) {
+  input,
+  select,
+  textarea,
+  button,
+  .link-button,
+  .file-input {
+    font-size: 16px;
+  }
+
+  input,
+  select,
+  button,
+  .link-button,
+  .file-input {
+    min-height: 44px;
+  }
+
+  input,
+  select,
+  textarea {
+    padding: 0.65rem 0.7rem;
+  }
+
+  .tab {
+    min-height: 44px;
+    padding: 0.55rem 0.3rem;
+  }
+
+  .row-actions {
+    gap: 0.55rem;
+  }
+
+  .row-actions button,
+  .row-actions .link-button {
+    min-height: 44px;
+    padding: 0.58rem 0.72rem;
+  }
+
   .sets-table-wrap {
     display: none;
   }
@@ -587,5 +625,20 @@ button:disabled {
 
   .exercise-session .row-actions button {
     width: 100%;
+  }
+
+  .set-mobile-head button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .set-mobile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .checkbox-row input[type='checkbox'] {
+    width: 20px;
+    height: 20px;
   }
 }

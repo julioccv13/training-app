@@ -7,6 +7,7 @@
 - Improved dashboard readability for active-day chips.
 - Added decorative pixel-art icons (MIT) for top header, tabs, and active-day section.
 - Added responsive Track set entry: mobile uses card layout per set to prevent table overflow and device-dependent misalignment.
+- Improved mobile touch ergonomics: larger form controls, 44px touch targets, bigger checkboxes, and iOS-friendly input font sizing.
 
 ## 2026-03-04 (e1RM update)
 - Added dynamic e1RM estimation per exercise from routine logs using Brzycki equation.
