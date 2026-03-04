@@ -47,6 +47,14 @@ const TRAINING_TERMS = [
   'jalon',
   'dominadas',
   'sentadilla',
+  'zancada',
+  'zancadas',
+  'bulgarian',
+  'bulgarian squat',
+  'split squat',
+  'zancada bulgara',
+  'lunges',
+  'lunge',
   'peso muerto',
   'press',
   'biceps',
@@ -81,22 +89,32 @@ const tokenize = (value: string): string[] =>
     .split(/[^a-z0-9]+/)
     .filter((token) => token.length >= 3)
 
-const isTrainingRelated = (item: InternetMediaResult, query: string): boolean => {
-  const haystack = normalizeText(
+const buildHaystack = (item: InternetMediaResult): string =>
+  normalizeText(
     [item.title, item.provider, item.url, item.attribution ?? '', item.license ?? '', item.tags.join(' ')].join(' '),
   )
 
-  const hasTrainingTerm = TRAINING_TERMS.some((term) => haystack.includes(normalizeText(term)))
-  if (!hasTrainingTerm) {
+const countQueryTokenMatches = (haystack: string, query: string): number => {
+  const normalizedQuery = normalizeText(query)
+  const queryTokens = tokenize(query)
+
+  if (queryTokens.length === 0) {
+    return haystack.includes(normalizedQuery) ? 1 : 0
+  }
+
+  return queryTokens.reduce((sum, token) => (haystack.includes(token) ? sum + 1 : sum), 0)
+}
+
+const hasTrainingTerm = (haystack: string): boolean =>
+  TRAINING_TERMS.some((term) => haystack.includes(normalizeText(term)))
+
+const isTrainingRelated = (item: InternetMediaResult, query: string): boolean => {
+  const haystack = buildHaystack(item)
+  if (!hasTrainingTerm(haystack)) {
     return false
   }
 
-  const queryTokens = tokenize(query)
-  if (queryTokens.length === 0) {
-    return true
-  }
-
-  return queryTokens.some((token) => haystack.includes(token))
+  return countQueryTokenMatches(haystack, query) > 0
 }
 
 const fetchJson = async <T>(url: string): Promise<T> => {
@@ -233,9 +251,28 @@ export const searchInternetMedia = async (query: string): Promise<InternetMediaR
     searchWikimedia(normalizedQuery),
   ])
 
-  const filtered = uniqueByUrl(openverseResults.concat(wikimediaResults)).filter((item) =>
-    isTrainingRelated(item, normalizedQuery),
-  )
+  const uniqueResults = uniqueByUrl(openverseResults.concat(wikimediaResults))
+  const strict = uniqueResults.filter((item) => isTrainingRelated(item, normalizedQuery))
 
-  return filtered.slice(0, 30)
+  if (strict.length > 0) {
+    return strict.slice(0, 30)
+  }
+
+  const fallback = uniqueResults
+    .map((item) => {
+      const haystack = buildHaystack(item)
+      const tokenMatches = countQueryTokenMatches(haystack, normalizedQuery)
+      const exactQueryBonus = haystack.includes(normalizeText(normalizedQuery)) ? 2 : 0
+      const trainingBonus = hasTrainingTerm(haystack) ? 1 : 0
+
+      return {
+        item,
+        score: tokenMatches + exactQueryBonus + trainingBonus,
+      }
+    })
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score || a.item.title.localeCompare(b.item.title))
+    .map((entry) => entry.item)
+
+  return fallback.slice(0, 30)
 }

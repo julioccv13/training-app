@@ -12,7 +12,6 @@ import {
   STORAGE_KEYS,
 } from './data/seedRoutine'
 import {
-  calcWeeklyVolume,
   createId,
   emptyWorkoutSet,
   estimateE1rmBrzycki,
@@ -49,6 +48,18 @@ type ExerciseE1rmMeta = {
   sampleCount: number
   anchorReps: number | null
   suggestedWeight: number | null
+}
+type SessionExerciseSummary = {
+  exerciseName: string
+  setCount: number
+}
+type SessionSummary = {
+  id: string
+  createdAt: string
+  dayName: string
+  exerciseCount: number
+  totalSets: number
+  exercises: SessionExerciseSummary[]
 }
 
 type ImportPayload = {
@@ -882,15 +893,53 @@ function App() {
     [allExercisesForActiveRoutine, e1rmByExercise],
   )
 
-  const weeklyVolume = useMemo(
-    () => calcWeeklyVolume(logs, activeRoutineId || undefined),
-    [logs, activeRoutineId],
-  )
+  const recentSessions = useMemo(() => {
+    const sessionMap = new Map<
+      string,
+      {
+        id: string
+        createdAt: string
+        dayName: string
+        totalSets: number
+        exercisesByName: Map<string, number>
+      }
+    >()
 
-  const recentLogs = useMemo(
-    () => logsForActiveRoutine.slice(0, 12),
-    [logsForActiveRoutine],
-  )
+    logsForActiveRoutine.forEach((log) => {
+      const sessionId = `${log.createdAt}::${log.routineId}::${log.dayId}`
+      const setCount = log.sets.length
+      const existing = sessionMap.get(sessionId)
+      if (!existing) {
+        sessionMap.set(sessionId, {
+          id: sessionId,
+          createdAt: log.createdAt,
+          dayName: log.dayName,
+          totalSets: setCount,
+          exercisesByName: new Map([[log.exerciseName, setCount]]),
+        })
+        return
+      }
+
+      existing.totalSets += setCount
+      existing.exercisesByName.set(log.exerciseName, (existing.exercisesByName.get(log.exerciseName) ?? 0) + setCount)
+    })
+
+    return Array.from(sessionMap.values())
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 8)
+      .map(
+        (session): SessionSummary => ({
+          id: session.id,
+          createdAt: session.createdAt,
+          dayName: session.dayName,
+          totalSets: session.totalSets,
+          exerciseCount: session.exercisesByName.size,
+          exercises: Array.from(session.exercisesByName.entries())
+            .map(([exerciseName, setCount]) => ({ exerciseName, setCount }))
+            .sort((a, b) => b.setCount - a.setCount || a.exerciseName.localeCompare(b.exerciseName)),
+        }),
+      )
+  }, [logsForActiveRoutine])
 
   const dayStats = useMemo(
     () =>
@@ -1022,7 +1071,6 @@ function App() {
             <article className="panel stat">
               <h2>Tracking</h2>
               <p>{logsForActiveRoutine.length} registros en rutina activa</p>
-              <p>{Math.round(weeklyVolume)} volumen ultimos 7 dias ({settings.units})</p>
               <p>e1RM disponible en {e1rmReadyExerciseCount}/{allExercisesForActiveRoutine.length} ejercicios</p>
               <p>Lock rutina por dispositivo: {settings.routineLockEnabled ? 'Activo' : 'Inactivo'}</p>
             </article>
@@ -1058,15 +1106,17 @@ function App() {
             </article>
 
             <article className="panel full">
-              <h2>Registros recientes (rutina activa)</h2>
+              <h2>Sesiones recientes (rutina activa)</h2>
               <div className="logs-list">
-                {recentLogs.length === 0 && <p>No hay sesiones registradas para esta rutina.</p>}
-                {recentLogs.map((log) => (
-                  <div key={log.id} className="log-row">
-                    <strong>{log.exerciseName}</strong>
-                    <span>{new Date(log.createdAt).toLocaleString()}</span>
-                    <span>{log.dayName}</span>
-                    <span>{log.sets.length} sets</span>
+                {recentSessions.length === 0 && <p>No hay sesiones registradas para esta rutina.</p>}
+                {recentSessions.map((session) => (
+                  <div key={session.id} className="log-row">
+                    <strong>{new Date(session.createdAt).toLocaleString()}</strong>
+                    <span>{session.dayName}</span>
+                    <span>{session.exerciseCount} ejercicios | {session.totalSets} sets</span>
+                    <span>
+                      {session.exercises.map((exercise) => `${exercise.exerciseName}: ${exercise.setCount} sets`).join(' | ')}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -1506,7 +1556,9 @@ function App() {
               <p className="hint">
                 Los resultados externos se guardan como URL en la biblioteca. Para dejarlos permanentes en el repo, usa pin manual desde codigo.
               </p>
-              <p className="hint">La busqueda externa aplica filtro para contenido relacionado con entrenamiento.</p>
+              <p className="hint">
+                La busqueda externa prioriza entrenamiento y, si queda vacia, aplica fallback por coincidencia con la consulta.
+              </p>
             </article>
 
             {internetResults.length > 0 && (
