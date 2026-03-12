@@ -607,6 +607,15 @@ button:disabled {
     gap: 0.55rem;
   }
 
+  .exercise-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .exercise-head p {
+    width: 100%;
+  }
+
   .row-actions button,
   .row-actions .link-button {
     min-height: 44px;
