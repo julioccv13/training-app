@@ -28,6 +28,7 @@ import { searchInternetMedia, type InternetMediaResult } from './lib/mediaSearch
 import { downloadJson, loadJson, readJsonFile, saveJson } from './lib/storage'
 import type {
   AppSettings,
+  FontScale,
   MediaItem,
   MediaRole,
   MediaType,
@@ -77,6 +78,12 @@ const tabs: Array<{ key: TabKey; label: string; iconPath: string }> = [
   { key: 'media', label: 'Media', iconPath: 'icons/pixel/image.svg' },
   { key: 'settings', label: 'Ajustes', iconPath: 'icons/pixel/settings-cog.svg' },
 ]
+
+const FONT_SCALE_LABELS: Record<FontScale, string> = {
+  small: 'Pequena',
+  medium: 'Mediana',
+  large: 'Grande',
+}
 
 const MIN_E1RM_SAMPLES = 3
 
@@ -209,6 +216,13 @@ function App() {
   useEffect(() => {
     saveJson(STORAGE_KEYS.settings, settings)
   }, [settings])
+
+  useEffect(() => {
+    document.documentElement.dataset.fontScale = settings.fontScale
+    return () => {
+      delete document.documentElement.dataset.fontScale
+    }
+  }, [settings.fontScale])
 
   const nonArchivedRoutines = useMemo(
     () => routineBundle.routines.filter((routine) => !routine.isArchived),
@@ -1723,6 +1737,27 @@ function App() {
           <section className="panel-grid">
             <article className="panel full">
               <h2>Preferencias</h2>
+              <label>
+                Tamano de fuente
+                <select
+                  value={settings.fontScale}
+                  onChange={(event) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      fontScale: event.target.value as FontScale,
+                    }))
+                  }
+                >
+                  {Object.entries(FONT_SCALE_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <p className="hint">Se guarda en este dispositivo para que cada telefono use el tamano de lectura que le sirva mejor.</p>
+
               <label>
                 Unidad de peso
                 <select

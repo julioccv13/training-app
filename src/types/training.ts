@@ -2,6 +2,7 @@ export type MediaType = 'image' | 'video'
 
 export type MediaRole = 'single' | 'multi' | 'reference'
 export type MediaOrigin = 'local' | 'external'
+export type FontScale = 'small' | 'medium' | 'large'
 
 export interface Routine {
   id: string
@@ -83,6 +84,7 @@ export interface WorkoutLog {
 }
 
 export interface AppSettings {
+  fontScale: FontScale
   units: 'kg' | 'lb'
   schemaVersion: number
   selectedRoutineId: string | null

@@ -1,6 +1,7 @@
 import { mediaCatalog } from './mediaCatalog'
 import type {
   AppSettings,
+  FontScale,
   MediaItem,
   MediaOrigin,
   MediaRole,
@@ -1015,12 +1016,16 @@ export const seedRoutineBundle: RoutineBundle = {
 }
 
 export const seedSettings: AppSettings = {
+  fontScale: 'small',
   units: 'kg',
-  schemaVersion: 3,
+  schemaVersion: 4,
   selectedRoutineId: defaultRoutine.id,
   routineLockEnabled: true,
   routineLockConfirmedAt: null,
 }
+
+const isFontScale = (value: unknown): value is FontScale =>
+  value === 'small' || value === 'medium' || value === 'large'
 
 const isMediaRole = (value: unknown): value is MediaRole =>
   value === 'single' || value === 'multi' || value === 'reference'
@@ -1352,6 +1357,9 @@ export const normalizeSettingsState = (rawState: unknown, routineBundle: Routine
 
   if (rawState && typeof rawState === 'object') {
     const item = rawState as Record<string, unknown>
+    if (isFontScale(item.fontScale)) {
+      base.fontScale = item.fontScale
+    }
     if (item.units === 'kg' || item.units === 'lb') {
       base.units = item.units
     }

@@ -1,7 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Public+Sans:wght@400;600;700;800&display=swap');
 
 :root {
+  --font-scale: 1;
   font-family: 'Public Sans', 'Segoe UI', sans-serif;
+  font-size: calc(16px * var(--font-scale));
   line-height: 1.4;
   font-weight: 400;
   color: #121c24;
@@ -10,6 +12,14 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+:root[data-font-scale='medium'] {
+  --font-scale: 1.125;
+}
+
+:root[data-font-scale='large'] {
+  --font-scale: 1.25;
 }
 
 h1,
