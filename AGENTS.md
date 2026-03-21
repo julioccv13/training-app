@@ -1,44 +1,10 @@
-# AGENTS.md — training-app
+# AGENTS.md — training-app (Codex)
 
-## Owner
-- GitHub: `julioccv13`
-- Repo: `julioccv13/training-app`
+> All rules in this project's CLAUDE.md. Codex additions: see ~/.claude/AGENTS.md.
 
-## Project goal
-PWA de entrenamiento para iPhone con:
-- Rutinas multiples seleccionables en dispositivo
-- Confirmacion al cambiar rutina activa (device lock)
-- Tracking por rutina y por dia
-- Objetivos dinamicos por ejercicio basados en e1RM (Brzycki)
-- Auto-actualizacion de `targetWeight` al guardar sesion (si hay datos validos)
-- Biblioteca media desacoplada del tracking
-- Busqueda local + busqueda internet de media (URLs externas)
+## Repo
+- GitHub: julioccv13/training-app
+- Deploy: GitHub Pages (.github/workflows/deploy-pages.yml)
 
-## Paths
-- Repo root: `~/workspace/personal/training app`
-- Docs/media source: `~/workspace/personal/docs/training app/media`
-- Task logs: `~/workspace/personal/docs/training app/tasks`
-
-## Rules
-- GitHub only (`gh`) using SSH
-- No branch changes unless explicitly requested
-- Short, simple commit messages in English
-- No secrets in repository
-
-## Maintenance
-- Add routines from code in `src/data/seedRoutine.ts`
-- Edit/create routines from app tab `Rutinas`
-- e1RM dinamico: revisar logica en `src/lib/helpers.ts` y uso en `src/App.tsx`
-- Media local sync + catalog generation via `scripts/generate_media_catalog.py`
-
-## Deploy
-- GitHub Pages via `.github/workflows/deploy-pages.yml`
-
-## Validation checklist
-- `npm run lint`
-- `npm run build`
-- Verify routine lock confirmation on routine switch
-- Verify logs are partitioned by routine
-- Verify e1RM appears with >=3 valid sets and suggested load can be applied
-- Verify save session auto-updates objective weight when e1RM data is sufficient
-- Verify media internet search and save URL flow
+## Source of truth
+Project rules: `~/workspace/personal/training app/CLAUDE.md`
