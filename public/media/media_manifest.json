@@ -1,349 +1,897 @@
 {
-  "generated_at": "2026-03-03T23:15:52.702364",
-  "source": "/home/julio/workspace/personal/docs/training app",
-  "images_total": 8,
+  "generated_at": "2026-03-20T22:30:11.261502",
+  "source": "/home/julio/workspace/personal/docs/training app/media",
+  "images_total": 38,
   "videos_total": 33,
   "unique_videos": 28,
   "duplicate_videos": 5,
-  "images": [
+  "records": [
     {
       "id": "ref-image-01",
-      "file": "media/images/reference/reference_01.jpeg",
-      "original_name": "WhatsApp Image 2026-03-03 at 21.55.42.jpeg"
+      "title": "Reference 01",
+      "slug": "reference-01",
+      "type": "image",
+      "path": "media/images/reference/reference_01.jpeg",
+      "isDuplicate": false,
+      "checksum": "5411047969e5892b07fbb10a2dfd55086ae81d6d3b3eccacad3d482741db1a56",
+      "role": "reference",
+      "exerciseSlugs": []
     },
     {
       "id": "ref-image-02",
-      "file": "media/images/reference/reference_02.jpeg",
-      "original_name": "WhatsApp Image 2026-03-03 at 21.56.24.jpeg"
+      "title": "Reference 02",
+      "slug": "reference-02",
+      "type": "image",
+      "path": "media/images/reference/reference_02.jpeg",
+      "isDuplicate": false,
+      "checksum": "23f3229ef22bf57f7ff5c196575d518c26308b6b83375ad5a7a0fac7fbe6fed5",
+      "role": "reference",
+      "exerciseSlugs": []
     },
     {
       "id": "ref-image-03",
-      "file": "media/images/reference/reference_03.jpeg",
-      "original_name": "WhatsApp Image 2026-03-03 at 21.56.241.jpeg"
+      "title": "Reference 03",
+      "slug": "reference-03",
+      "type": "image",
+      "path": "media/images/reference/reference_03.jpeg",
+      "isDuplicate": false,
+      "checksum": "35281c96c025c035b8698a516d32c47ff98561be442508d808f856f0d71d5263",
+      "role": "reference",
+      "exerciseSlugs": []
     },
     {
       "id": "ref-image-04",
-      "file": "media/images/reference/reference_04.jpeg",
-      "original_name": "WhatsApp Image 2026-03-03 at 21.56.25 (1).jpeg"
+      "title": "Reference 04",
+      "slug": "reference-04",
+      "type": "image",
+      "path": "media/images/reference/reference_04.jpeg",
+      "isDuplicate": false,
+      "checksum": "ecf87355ce424db04169bcebb758a1fe6ea1e399fc0eb8e3440dcb1209e899e2",
+      "role": "reference",
+      "exerciseSlugs": []
     },
     {
       "id": "ref-image-05",
-      "file": "media/images/reference/reference_05.jpeg",
-      "original_name": "WhatsApp Image 2026-03-03 at 21.56.25 (2).jpeg"
+      "title": "Reference 05",
+      "slug": "reference-05",
+      "type": "image",
+      "path": "media/images/reference/reference_05.jpeg",
+      "isDuplicate": false,
+      "checksum": "85bd67c923c2be273fcec465631389118dfc98176f46f2123e96a58d80c543cd",
+      "role": "reference",
+      "exerciseSlugs": []
     },
     {
       "id": "ref-image-06",
-      "file": "media/images/reference/reference_06.jpeg",
-      "original_name": "WhatsApp Image 2026-03-03 at 21.56.25 (3).jpeg"
+      "title": "Reference 06",
+      "slug": "reference-06",
+      "type": "image",
+      "path": "media/images/reference/reference_06.jpeg",
+      "isDuplicate": false,
+      "checksum": "4fb41e9ec127c9d0a050d51051a58438eb245006476cc97959ce35689a590244",
+      "role": "reference",
+      "exerciseSlugs": []
     },
     {
       "id": "ref-image-07",
-      "file": "media/images/reference/reference_07.jpeg",
-      "original_name": "WhatsApp Image 2026-03-03 at 21.56.25.jpeg"
+      "title": "Reference 07",
+      "slug": "reference-07",
+      "type": "image",
+      "path": "media/images/reference/reference_07.jpeg",
+      "isDuplicate": false,
+      "checksum": "7f4532f0f94ed4798d4c847e49f281b6b29347d8bd0e0ff75f430d0655b47579",
+      "role": "reference",
+      "exerciseSlugs": []
     },
     {
       "id": "ref-image-08",
-      "file": "media/images/reference/reference_08.jpeg",
-      "original_name": "WhatsApp Image 2026-03-03 at 21.56.26.jpeg"
-    }
-  ],
-  "videos": [
+      "title": "Reference 08",
+      "slug": "reference-08",
+      "type": "image",
+      "path": "media/images/reference/reference_08.jpeg",
+      "isDuplicate": false,
+      "checksum": "ef588c3aec9ffb48b7c936330b7dc52741eab91621f7bd63fe6355ffba3b5175",
+      "role": "reference",
+      "exerciseSlugs": []
+    },
+    {
+      "id": "ref-image-rutina-principal-lower-body-aduccion-de-cadera-maquina",
+      "title": "Rutina Principal Lower Body - Aduccion De Cadera Maquina",
+      "slug": "rutina-principal-lower-body-aduccion-de-cadera-maquina",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/lower-body/01_aduccion_de_cadera_maquina.jpeg",
+      "isDuplicate": false,
+      "checksum": "58e90a5fbe801c0557f0e91971f8741e2056da476031291379f6d630ad4f0af0",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-aduccion-de-cadera-en-maquina"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-lower-body-prensa-inclinada",
+      "title": "Rutina Principal Lower Body - Prensa Inclinada",
+      "slug": "rutina-principal-lower-body-prensa-inclinada",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/lower-body/02_prensa_inclinada.jpeg",
+      "isDuplicate": false,
+      "checksum": "2b65e534dee5a302b94e9e03aea5e3b280f17cec7e002fc3c7ba33d701a41f45",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-prensa-inclinada"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-lower-body-hack-squat-con-apoyo-lumbar",
+      "title": "Rutina Principal Lower Body - Hack Squat Con Apoyo Lumbar",
+      "slug": "rutina-principal-lower-body-hack-squat-con-apoyo-lumbar",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/lower-body/03_hack_squat_con_apoyo_lumbar.jpeg",
+      "isDuplicate": false,
+      "checksum": "a25e0792832b91f328626013bea8ef638152ef40cc3776319a9bfd837a30693a",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-hack-squat-opcional"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-lower-body-extension-de-rodilla-maquina",
+      "title": "Rutina Principal Lower Body - Extension De Rodilla Maquina",
+      "slug": "rutina-principal-lower-body-extension-de-rodilla-maquina",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/lower-body/04_extension_de_rodilla_maquina.jpeg",
+      "isDuplicate": false,
+      "checksum": "e125466364cba2eb2f7a01939ef2b55c4b817a8b48d81e2741fb047b6a0ffea0",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-extension-de-rodilla-en-maquina"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-lower-body-extension-lumbar-en-banco-horizontal",
+      "title": "Rutina Principal Lower Body - Extension Lumbar En Banco Horizontal",
+      "slug": "rutina-principal-lower-body-extension-lumbar-en-banco-horizontal",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/lower-body/05_extension_lumbar_en_banco_horizontal.jpeg",
+      "isDuplicate": false,
+      "checksum": "a69fa62989f8a813e7c71eaa84d6a76c1af1380577e3a8721553267b224b1056",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-extension-lumbar-opcional"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-lower-body-extension-lumbar-en-banco-horizontal-2",
+      "title": "Rutina Principal Lower Body - Extension Lumbar En Banco Horizontal 2",
+      "slug": "rutina-principal-lower-body-extension-lumbar-en-banco-horizontal-2",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/lower-body/06_extension_lumbar_en_banco_horizontal_2.jpeg",
+      "isDuplicate": false,
+      "checksum": "feb96ce38120a714967cce2f74701cd4c9e365f340a427b48903522a92530e44",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-extension-lumbar-opcional"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-lower-body-aduccion-de-cadera-maquina-2",
+      "title": "Rutina Principal Lower Body - Aduccion De Cadera Maquina 2",
+      "slug": "rutina-principal-lower-body-aduccion-de-cadera-maquina-2",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/lower-body/07_aduccion_de_cadera_maquina_2.jpeg",
+      "isDuplicate": false,
+      "checksum": "4771b2795a2c593ab4387711552281987d77ae275e7336ce91c59869dd6c22b4",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-aduccion-de-cadera-en-maquina"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-lower-body-abduccion-de-cadera-maquina",
+      "title": "Rutina Principal Lower Body - Abduccion De Cadera Maquina",
+      "slug": "rutina-principal-lower-body-abduccion-de-cadera-maquina",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/lower-body/08_abduccion_de_cadera_maquina.jpeg",
+      "isDuplicate": false,
+      "checksum": "6e10e4b675cbefe6fecf274b12b80276ca667bd8dad74d55a533a63f0b0895c1",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-abduccion-de-cadera-en-maquina"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-lower-body-flexion-de-rodilla-sentado-maquina",
+      "title": "Rutina Principal Lower Body - Flexion De Rodilla Sentado Maquina",
+      "slug": "rutina-principal-lower-body-flexion-de-rodilla-sentado-maquina",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/lower-body/09_flexion_de_rodilla_sentado_maquina.jpeg",
+      "isDuplicate": false,
+      "checksum": "ae303b2a465e9738d52a1cf140f7d73946e5b688230b8596fe81ff3a07e4511b",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-curl-femoral-sentado-en-maquina"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-lower-body-extension-de-rodilla-maquina-2",
+      "title": "Rutina Principal Lower Body - Extension De Rodilla Maquina 2",
+      "slug": "rutina-principal-lower-body-extension-de-rodilla-maquina-2",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/lower-body/10_extension_de_rodilla_maquina_2.jpeg",
+      "isDuplicate": false,
+      "checksum": "dc085ab4a8b384799e85b64b7efc96093204a97f02960529d41dbcb11fc6bd63",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-extension-de-rodilla-en-maquina"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-lower-body-prensa-inclinada-2",
+      "title": "Rutina Principal Lower Body - Prensa Inclinada 2",
+      "slug": "rutina-principal-lower-body-prensa-inclinada-2",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/lower-body/11_prensa_inclinada_2.jpeg",
+      "isDuplicate": false,
+      "checksum": "61ca06aa9ebbc50e336a759fd390b68c5173334af2201c37cdd656293ea7b17e",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-prensa-inclinada"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-lower-body-hip-thrust-en-maquina",
+      "title": "Rutina Principal Lower Body - Hip Thrust En Maquina",
+      "slug": "rutina-principal-lower-body-hip-thrust-en-maquina",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/lower-body/12_hip_thrust_en_maquina.jpeg",
+      "isDuplicate": false,
+      "checksum": "ff2fb27a74c4295e3126a9a05607e30e37ea5faa7b3827efa590013c7208bcfc",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-hip-thrust-opcional"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-lower-body-crunch-abdominal-sentado-maquina",
+      "title": "Rutina Principal Lower Body - Crunch Abdominal Sentado Maquina",
+      "slug": "rutina-principal-lower-body-crunch-abdominal-sentado-maquina",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/lower-body/13_crunch_abdominal_sentado_maquina.jpeg",
+      "isDuplicate": false,
+      "checksum": "34c614ce428d832c7d7ad131a3291ec0ed03dececb2dec5b5d5f58749198aae7",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-crunch-abdominal-sentado-en-maquina"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-upper-body-dominadas-asistidas",
+      "title": "Rutina Principal Upper Body - Dominadas Asistidas",
+      "slug": "rutina-principal-upper-body-dominadas-asistidas",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/upper-body/01_dominadas_asistidas.jpeg",
+      "isDuplicate": false,
+      "checksum": "51e3b1449d9c2ced476a1b0ec89834967e57d592f0be2ac1cc77a9b7e1d0cb68",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-dominadas-asistidas-opcional"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-upper-body-remo-alto-hammer",
+      "title": "Rutina Principal Upper Body - Remo Alto Hammer",
+      "slug": "rutina-principal-upper-body-remo-alto-hammer",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/upper-body/02_remo_alto_hammer.jpeg",
+      "isDuplicate": false,
+      "checksum": "2e10b5bb99a212d143a96b3c315c5b0a6003d3c3063ad3e0c1ee6dcef33a5144",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-remo-alto-hammer-opcional"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-upper-body-remo-cerrado-polea-sentado",
+      "title": "Rutina Principal Upper Body - Remo Cerrado Polea Sentado",
+      "slug": "rutina-principal-upper-body-remo-cerrado-polea-sentado",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/upper-body/03_remo_cerrado_polea_sentado.jpeg",
+      "isDuplicate": false,
+      "checksum": "acfcf5eba1fff6eb207110bcece8a1d555b1dcbc3f4fea9599e5d61c882e0ef5",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-remo-sentado-maquina"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-upper-body-jalon-en-polea-al-pecho",
+      "title": "Rutina Principal Upper Body - Jalon En Polea Al Pecho",
+      "slug": "rutina-principal-upper-body-jalon-en-polea-al-pecho",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/upper-body/04_jalon_en_polea_al_pecho.jpeg",
+      "isDuplicate": false,
+      "checksum": "c20b75b57a812f423fbf029679d6b94453082171927b55b47edaf59b01744c2f",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-jalon-en-maquina"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-upper-body-curl-de-biceps-en-maquina-inclinada",
+      "title": "Rutina Principal Upper Body - Curl De Biceps En Maquina Inclinada",
+      "slug": "rutina-principal-upper-body-curl-de-biceps-en-maquina-inclinada",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/upper-body/05_curl_de_biceps_en_maquina_inclinada.jpeg",
+      "isDuplicate": false,
+      "checksum": "ccba56cc4c6387db7eb4650dac740469f36c98d99d3fcbc6daab941f57b82c70",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-curl-de-biceps-en-maquina"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-upper-body-curl-de-biceps-en-maquina-predicador",
+      "title": "Rutina Principal Upper Body - Curl De Biceps En Maquina Predicador",
+      "slug": "rutina-principal-upper-body-curl-de-biceps-en-maquina-predicador",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/upper-body/06_curl_de_biceps_en_maquina_predicador.jpeg",
+      "isDuplicate": false,
+      "checksum": "2809bce54fd54ab0f01acd736d62448d04085d7668c1dac8ae73344bb29eacbe",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-curl-de-biceps-en-maquina"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-upper-body-curl-de-muneca-en-maquina-o-polea",
+      "title": "Rutina Principal Upper Body - Curl De Muneca En Maquina O Polea",
+      "slug": "rutina-principal-upper-body-curl-de-muneca-en-maquina-o-polea",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/upper-body/07_curl_de_muneca_en_maquina_o_polea.jpeg",
+      "isDuplicate": false,
+      "checksum": "ccc3ae74ff395993b09b60c84e7935acba00c141ef474d6c8255fea3440a6658",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-curl-de-muneca-opcional"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-upper-body-rotacion-interna-de-hombro-en-polea",
+      "title": "Rutina Principal Upper Body - Rotacion Interna De Hombro En Polea",
+      "slug": "rutina-principal-upper-body-rotacion-interna-de-hombro-en-polea",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/upper-body/08_rotacion_interna_de_hombro_en_polea.jpeg",
+      "isDuplicate": false,
+      "checksum": "b2c555adc77106b905599bff57e3637345ca45fd6dbb59375cb188c0505f2427",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-rotacion-interna-opcional"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-upper-body-rotacion-externa-de-hombro-en-polea",
+      "title": "Rutina Principal Upper Body - Rotacion Externa De Hombro En Polea",
+      "slug": "rutina-principal-upper-body-rotacion-externa-de-hombro-en-polea",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/upper-body/09_rotacion_externa_de_hombro_en_polea.jpeg",
+      "isDuplicate": false,
+      "checksum": "bb954128e81aee2b8c06fc5edd00a336b02640028ac9c1239fbbfa2b8709b591",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-rotacion-externa-opcional"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-upper-body-elevaciones-laterales-maquina",
+      "title": "Rutina Principal Upper Body - Elevaciones Laterales Maquina",
+      "slug": "rutina-principal-upper-body-elevaciones-laterales-maquina",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/upper-body/10_elevaciones_laterales_maquina.jpeg",
+      "isDuplicate": false,
+      "checksum": "e6793e972c555973af8e82c9e1ef3b7bc2f5e4d55f71420ba20dfe1efa9beaff",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-elevaciones-laterales-maquina"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-upper-body-press-inclinado-en-maquina",
+      "title": "Rutina Principal Upper Body - Press Inclinado En Maquina",
+      "slug": "rutina-principal-upper-body-press-inclinado-en-maquina",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/upper-body/11_press_inclinado_en_maquina.jpeg",
+      "isDuplicate": false,
+      "checksum": "65e37efb4b700e578c6a5a04d8fd04848e5bdb663f48ffffe2dc4d04d1fd7bb0",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-press-inclinado-en-maquina"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-upper-body-press-de-pecho-sentado-maquina",
+      "title": "Rutina Principal Upper Body - Press De Pecho Sentado Maquina",
+      "slug": "rutina-principal-upper-body-press-de-pecho-sentado-maquina",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/upper-body/12_press_de_pecho_sentado_maquina.jpeg",
+      "isDuplicate": false,
+      "checksum": "33ca376c2f83e9f0f3bb36809e0b077db685b6004d33156b5ab9d3ce4340122d",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-press-de-pecho-sentado-en-maquina"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-upper-body-aperturas-pectoral-maquina-pec-deck",
+      "title": "Rutina Principal Upper Body - Aperturas Pectoral Maquina Pec Deck",
+      "slug": "rutina-principal-upper-body-aperturas-pectoral-maquina-pec-deck",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/upper-body/13_aperturas_pectoral_maquina_pec_deck.jpeg",
+      "isDuplicate": false,
+      "checksum": "7fa439432c28d617801f78da957d056524a8d8f3059b784877ccf293f2823c98",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-aperturas-pectoral-opcional"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-upper-body-press-de-hombro-en-maquina",
+      "title": "Rutina Principal Upper Body - Press De Hombro En Maquina",
+      "slug": "rutina-principal-upper-body-press-de-hombro-en-maquina",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/upper-body/14_press_de_hombro_en_maquina.jpeg",
+      "isDuplicate": false,
+      "checksum": "99823fa944d34b372a8805746ce3f81edb07172bf208b168c86cbed31af25228",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-press-de-hombro-opcional"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-upper-body-fondos-asistidos",
+      "title": "Rutina Principal Upper Body - Fondos Asistidos",
+      "slug": "rutina-principal-upper-body-fondos-asistidos",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/upper-body/15_fondos_asistidos.jpeg",
+      "isDuplicate": false,
+      "checksum": "065e7e38c776fbc888df87d3ac1fdc06655d16a9493dd569b65fea0d1249c0c7",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-fondos-asistidos-opcional"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-upper-body-extension-de-triceps-en-maquina-o-polea",
+      "title": "Rutina Principal Upper Body - Extension De Triceps En Maquina O Polea",
+      "slug": "rutina-principal-upper-body-extension-de-triceps-en-maquina-o-polea",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/upper-body/16_extension_de_triceps_en_maquina_o_polea.jpeg",
+      "isDuplicate": false,
+      "checksum": "14f4a075988002720ff7f487f68c6bf99753756858cda9dbdf9d1ba2883baa03",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-extension-de-triceps-opcional"
+      ]
+    },
+    {
+      "id": "ref-image-rutina-principal-upper-body-pushdown-de-triceps-en-polea",
+      "title": "Rutina Principal Upper Body - Pushdown De Triceps En Polea",
+      "slug": "rutina-principal-upper-body-pushdown-de-triceps-en-polea",
+      "type": "image",
+      "path": "media/images/reference/rutina-principal/upper-body/17_pushdown_de_triceps_en_polea.jpeg",
+      "isDuplicate": false,
+      "checksum": "62d68ecd537583a2e98937fc0ff56c99a198c3f72d2f95240692510b17380ce9",
+      "role": "reference",
+      "exerciseSlugs": [
+        "principal-pushdown-de-triceps-en-polea"
+      ]
+    },
     {
       "id": "video-01",
-      "file": "media/videos/exercises/01_hip-thrust.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.16.mp4",
-      "sha256": "63c83968ecc1d9baca18e593cc8fe4f02ebc80d15e9eb64a0d89642f9c706f8a",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "hip-thrust"
+      "title": "Chest Db Press Variations",
+      "slug": "chest-db-press-variations",
+      "type": "video",
+      "path": "media/videos/exercises/01_chest-db-press-variations.mp4",
+      "isDuplicate": false,
+      "checksum": "63c83968ecc1d9baca18e593cc8fe4f02ebc80d15e9eb64a0d89642f9c706f8a",
+      "role": "multi",
+      "exerciseSlugs": []
     },
     {
       "id": "video-02",
-      "file": "media/videos/exercises/02_bulgaras.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.17 (1).mp4",
-      "sha256": "d27c12ec680e833c9f94a6155966ebc2931cd6d2416b0e0adfa078a3ba5d1c13",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "bulgaras"
+      "title": "Lat Db Row",
+      "slug": "lat-db-row",
+      "type": "video",
+      "path": "media/videos/exercises/02_lat-db-row.mp4",
+      "isDuplicate": false,
+      "checksum": "d27c12ec680e833c9f94a6155966ebc2931cd6d2416b0e0adfa078a3ba5d1c13",
+      "role": "single",
+      "exerciseSlugs": [
+        "remo-con-mancuernas"
+      ]
     },
     {
       "id": "video-03",
-      "file": "media/videos/exercises/03_sentadilla-profunda.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.17 (2).mp4",
-      "sha256": "42e1a9d6c7a3e62602f2db3bd46febed0e552110abc5898d0a7e09ef58aee23c",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "sentadilla-profunda"
+      "title": "Db Squat",
+      "slug": "db-squat",
+      "type": "video",
+      "path": "media/videos/exercises/03_db-squat.mp4",
+      "isDuplicate": false,
+      "checksum": "42e1a9d6c7a3e62602f2db3bd46febed0e552110abc5898d0a7e09ef58aee23c",
+      "role": "single",
+      "exerciseSlugs": [
+        "sentadilla-profunda"
+      ]
     },
     {
       "id": "video-04",
-      "file": "media/videos/exercises/04_maquina-aductores.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.17 (3).mp4",
-      "sha256": "c9b1222175189e2ceb83251564add73e3de5991e62335821d4006ea6d38a0c6b",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "maquina-aductores"
+      "title": "Ab Circuit",
+      "slug": "ab-circuit",
+      "type": "video",
+      "path": "media/videos/exercises/04_ab-circuit.mp4",
+      "isDuplicate": false,
+      "checksum": "c9b1222175189e2ceb83251564add73e3de5991e62335821d4006ea6d38a0c6b",
+      "role": "multi",
+      "exerciseSlugs": []
     },
     {
       "id": "video-05",
-      "file": "media/videos/exercises/05_copenhagen-adduction.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.17.mp4",
-      "sha256": "4f8f2c09dc1dfd76427316587b1743180e41ea14d40f499002cd939e2c6df214",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "copenhagen-adduction"
+      "title": "La Db Row 2",
+      "slug": "la-db-row-2",
+      "type": "video",
+      "path": "media/videos/exercises/05_la-db-row-2.mp4",
+      "isDuplicate": false,
+      "checksum": "4f8f2c09dc1dfd76427316587b1743180e41ea14d40f499002cd939e2c6df214",
+      "role": "single",
+      "exerciseSlugs": [
+        "remo-con-mancuernas"
+      ]
     },
     {
       "id": "video-06",
-      "file": "media/videos/exercises/06_extension-cuadriceps.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.18 (1).mp4",
-      "sha256": "ff53838e12655bdae2a7b0c944201daa27b5816eba6c427280eff4a8be91026f",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "extension-cuadriceps"
+      "title": "Upper Body Exercises 1",
+      "slug": "upper-body-exercises-1",
+      "type": "video",
+      "path": "media/videos/exercises/06_upper-body-exercises-1.mp4",
+      "isDuplicate": false,
+      "checksum": "ff53838e12655bdae2a7b0c944201daa27b5816eba6c427280eff4a8be91026f",
+      "role": "multi",
+      "exerciseSlugs": [
+        "face-pull",
+        "remo-con-mancuernas",
+        "jalon-al-pecho"
+      ]
     },
     {
       "id": "video-07",
-      "file": "media/videos/exercises/07_prensa.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.18 (2).mp4",
-      "sha256": "1a220a0d6bd8636d9f07e2cde66ebfcff294ddfbb9cd2bcea8c7cda5f7f57e0a",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "prensa"
+      "title": "Lower Back Extension",
+      "slug": "lower-back-extension",
+      "type": "video",
+      "path": "media/videos/exercises/07_lower-back-extension.mp4",
+      "isDuplicate": false,
+      "checksum": "1a220a0d6bd8636d9f07e2cde66ebfcff294ddfbb9cd2bcea8c7cda5f7f57e0a",
+      "role": "single",
+      "exerciseSlugs": [
+        "hiperextensiones"
+      ]
     },
     {
       "id": "video-08",
-      "file": "media/videos/exercises/08_zancadas.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.18 (3).mp4",
-      "sha256": "13802a61e606bb0b6a00484c5cd19465733e1c8a8d0f0d4ce12e7af6c7069261",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "zancadas"
+      "title": "Barbell Press Variations",
+      "slug": "barbell-press-variations",
+      "type": "video",
+      "path": "media/videos/exercises/08_barbell-press-variations.mp4",
+      "isDuplicate": false,
+      "checksum": "13802a61e606bb0b6a00484c5cd19465733e1c8a8d0f0d4ce12e7af6c7069261",
+      "role": "multi",
+      "exerciseSlugs": []
     },
     {
       "id": "video-09",
-      "file": "media/videos/exercises/09_peso-muerto-rumano.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.18.mp4",
-      "sha256": "5cad154a79d7fb8ecb7de5ac77a126d379a38b170cd319ee817fdaf23cfdb4ef",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "peso-muerto-rumano"
+      "title": "Machine Chest Fly",
+      "slug": "machine-chest-fly",
+      "type": "video",
+      "path": "media/videos/exercises/09_machine-chest-fly.mp4",
+      "isDuplicate": false,
+      "checksum": "5cad154a79d7fb8ecb7de5ac77a126d379a38b170cd319ee817fdaf23cfdb4ef",
+      "role": "single",
+      "exerciseSlugs": [
+        "aperturas"
+      ]
     },
     {
       "id": "video-10",
-      "file": "media/videos/exercises/10_curl-femoral.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.19 (1).mp4",
-      "sha256": "4c7d0279d6cd16c32d5a1e15caefaff1f81a70fda2f4f8e2cb0ca61bce550952",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "curl-femoral"
+      "title": "Lower Body Exercises 1",
+      "slug": "lower-body-exercises-1",
+      "type": "video",
+      "path": "media/videos/exercises/10_lower-body-exercises-1.mp4",
+      "isDuplicate": false,
+      "checksum": "4c7d0279d6cd16c32d5a1e15caefaff1f81a70fda2f4f8e2cb0ca61bce550952",
+      "role": "multi",
+      "exerciseSlugs": [
+        "sentadilla-profunda",
+        "zancadas"
+      ]
     },
     {
       "id": "video-11",
-      "file": "media/videos/exercises/11_peso-muerto.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.19 (2).mp4",
-      "sha256": "74b8cb8d3928608ac70e05b7383b523fd820bda95629a03e518a9a854d9e9249",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "peso-muerto"
+      "title": "Db Chest Exercises",
+      "slug": "db-chest-exercises",
+      "type": "video",
+      "path": "media/videos/exercises/11_db-chest-exercises.mp4",
+      "isDuplicate": false,
+      "checksum": "74b8cb8d3928608ac70e05b7383b523fd820bda95629a03e518a9a854d9e9249",
+      "role": "multi",
+      "exerciseSlugs": []
     },
     {
       "id": "video-12",
-      "file": "media/videos/exercises/12_extension-gemelos-de-pie.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.19 (3).mp4",
-      "sha256": "944aee7489b5470fe769b7f8956f998f0d77dc8a9a14297d1bbcd04b17e676cd",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "extension-gemelos-de-pie"
+      "title": "Leg Abduction",
+      "slug": "leg-abduction",
+      "type": "video",
+      "path": "media/videos/exercises/12_leg-abduction.mp4",
+      "isDuplicate": false,
+      "checksum": "944aee7489b5470fe769b7f8956f998f0d77dc8a9a14297d1bbcd04b17e676cd",
+      "role": "single",
+      "exerciseSlugs": [
+        "maquina-aductores"
+      ]
     },
     {
       "id": "video-13",
-      "file": "media/videos/exercises/13_extension-gemelos-sentado.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.19 (4).mp4",
-      "sha256": "accb03d6e578f9dafce0dd686ef99404c9541b313303d28b7f2bd70298aa0019",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "extension-gemelos-sentado"
+      "title": "Australian Pullup Variations",
+      "slug": "australian-pullup-variations",
+      "type": "video",
+      "path": "media/videos/exercises/13_australian-pullup-variations.mp4",
+      "isDuplicate": false,
+      "checksum": "accb03d6e578f9dafce0dd686ef99404c9541b313303d28b7f2bd70298aa0019",
+      "role": "multi",
+      "exerciseSlugs": [
+        "dominadas"
+      ]
     },
     {
       "id": "video-14",
-      "file": "media/videos/exercises/14_elevaciones-tibiales.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.19.mp4",
-      "sha256": "d1fff7303b381da512f4ab05a2fa2ba24f6b979dc72eb1abec349ec37c0295a2",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "elevaciones-tibiales"
+      "title": "Barbell Row Variations",
+      "slug": "barbell-row-variations",
+      "type": "video",
+      "path": "media/videos/exercises/14_barbell-row-variations.mp4",
+      "isDuplicate": false,
+      "checksum": "d1fff7303b381da512f4ab05a2fa2ba24f6b979dc72eb1abec349ec37c0295a2",
+      "role": "multi",
+      "exerciseSlugs": [
+        "remo-en-t",
+        "remo-inclinado"
+      ]
     },
     {
       "id": "video-15",
-      "file": "media/videos/exercises/15_marcha-talon.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.20 (1).mp4",
-      "sha256": "7e51fb2328bc3817cc418b03c33ba9e6e3b09839dc206695171c711870a2bf23",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "marcha-talon"
+      "title": "Bicep Cable Curl Variations",
+      "slug": "bicep-cable-curl-variations",
+      "type": "video",
+      "path": "media/videos/exercises/15_bicep-cable-curl-variations.mp4",
+      "isDuplicate": false,
+      "checksum": "7e51fb2328bc3817cc418b03c33ba9e6e3b09839dc206695171c711870a2bf23",
+      "role": "multi",
+      "exerciseSlugs": []
     },
     {
       "id": "video-16",
-      "file": "media/videos/exercises/16_encogimientos.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.20 (2).mp4",
-      "sha256": "f725221a82533679aa641932dd19172d93d32284864b6d37b21f97cdbe5331f7",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "encogimientos"
+      "title": "Db Squat Variations",
+      "slug": "db-squat-variations",
+      "type": "video",
+      "path": "media/videos/exercises/16_db-squat-variations.mp4",
+      "isDuplicate": false,
+      "checksum": "f725221a82533679aa641932dd19172d93d32284864b6d37b21f97cdbe5331f7",
+      "role": "multi",
+      "exerciseSlugs": [
+        "sentadilla-profunda"
+      ]
     },
     {
       "id": "video-17",
-      "file": "media/videos/exercises/17_aperturas.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.20 (3).mp4",
-      "sha256": "ddb7e17042d2a1fc581acf51e89702b9b855feac9e16947acaa3a90d806224d3",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "aperturas"
+      "title": "Lower Body Exercises 2",
+      "slug": "lower-body-exercises-2",
+      "type": "video",
+      "path": "media/videos/exercises/17_lower-body-exercises-2.mp4",
+      "isDuplicate": false,
+      "checksum": "ddb7e17042d2a1fc581acf51e89702b9b855feac9e16947acaa3a90d806224d3",
+      "role": "multi",
+      "exerciseSlugs": [
+        "peso-muerto-rumano",
+        "zancadas"
+      ]
     },
     {
       "id": "video-18",
-      "file": "media/videos/exercises/18_face-pull.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.20.mp4",
-      "sha256": "8fb3540354e52a86bc9a98dc7634a1645cae61d253c24fb21e627ff8f98e276d",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "face-pull"
-    },
-    {
-      "id": "video-19",
-      "file": "media/videos/archive/duplicates/dup_19_remo-en-t.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.21 (1).mp4",
-      "sha256": "8fb3540354e52a86bc9a98dc7634a1645cae61d253c24fb21e627ff8f98e276d",
-      "is_duplicate": true,
-      "canonical_of": "video-18",
-      "exercise_slug": "remo-en-t"
+      "title": "Lower Body Landmine Exercises",
+      "slug": "lower-body-landmine-exercises",
+      "type": "video",
+      "path": "media/videos/exercises/18_lower-body-landmine-exercises.mp4",
+      "isDuplicate": false,
+      "checksum": "8fb3540354e52a86bc9a98dc7634a1645cae61d253c24fb21e627ff8f98e276d",
+      "role": "multi",
+      "exerciseSlugs": [
+        "zancadas",
+        "sentadilla-profunda"
+      ]
     },
     {
       "id": "video-20",
-      "file": "media/videos/exercises/20_remo-inclinado.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.21 (2).mp4",
-      "sha256": "82d664eeb6a60d96e8cc3c1e576405375c8cb9bd33191493186ca70989ed6ffb",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "remo-inclinado"
-    },
-    {
-      "id": "video-21",
-      "file": "media/videos/archive/duplicates/dup_21_face-pull-rotacion-externa.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.21 (3).mp4",
-      "sha256": "ff53838e12655bdae2a7b0c944201daa27b5816eba6c427280eff4a8be91026f",
-      "is_duplicate": true,
-      "canonical_of": "video-06",
-      "exercise_slug": "face-pull-rotacion-externa"
+      "title": "Ab Circuit 2",
+      "slug": "ab-circuit-2",
+      "type": "video",
+      "path": "media/videos/exercises/20_ab-circuit-2.mp4",
+      "isDuplicate": false,
+      "checksum": "82d664eeb6a60d96e8cc3c1e576405375c8cb9bd33191493186ca70989ed6ffb",
+      "role": "multi",
+      "exerciseSlugs": []
     },
     {
       "id": "video-22",
-      "file": "media/videos/exercises/22_rotacion-externa-acostado.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.21.mp4",
-      "sha256": "2d89b3043e914b824a7978a8d952b40b03d68962a7115b9595e31a339a4c20de",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "rotacion-externa-acostado"
+      "title": "Db Squat 2",
+      "slug": "db-squat-2",
+      "type": "video",
+      "path": "media/videos/exercises/22_db-squat-2.mp4",
+      "isDuplicate": false,
+      "checksum": "2d89b3043e914b824a7978a8d952b40b03d68962a7115b9595e31a339a4c20de",
+      "role": "single",
+      "exerciseSlugs": [
+        "sentadilla-profunda"
+      ]
     },
     {
       "id": "video-23",
-      "file": "media/videos/exercises/23_jalon-al-pecho.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.22 (1).mp4",
-      "sha256": "c17e913dc03d60613c9b35fdbe776a63c1ab22f5b27bb19fb9c3a2854bf7a18a",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "jalon-al-pecho"
+      "title": "Chest Db Pullover",
+      "slug": "chest-db-pullover",
+      "type": "video",
+      "path": "media/videos/exercises/23_chest-db-pullover.mp4",
+      "isDuplicate": false,
+      "checksum": "c17e913dc03d60613c9b35fdbe776a63c1ab22f5b27bb19fb9c3a2854bf7a18a",
+      "role": "single",
+      "exerciseSlugs": []
     },
     {
       "id": "video-24",
-      "file": "media/videos/exercises/24_remo-con-mancuernas.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.22 (2).mp4",
-      "sha256": "5d9954ce3846bda0541e9d953b7c89f4a4c7247269c57edd7086de026f0baa0d",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "remo-con-mancuernas"
+      "title": "Ab Circuit 3",
+      "slug": "ab-circuit-3",
+      "type": "video",
+      "path": "media/videos/exercises/24_ab-circuit-3.mp4",
+      "isDuplicate": false,
+      "checksum": "5d9954ce3846bda0541e9d953b7c89f4a4c7247269c57edd7086de026f0baa0d",
+      "role": "multi",
+      "exerciseSlugs": []
     },
     {
       "id": "video-25",
-      "file": "media/videos/exercises/25_hiperextensiones.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.22 (3).mp4",
-      "sha256": "ca5d8f18ef13624d8263886e467ee44154f8799c7d3cad9cf6a6ee67ddc7a3bd",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "hiperextensiones"
+      "title": "Machine Chest Fly 2",
+      "slug": "machine-chest-fly-2",
+      "type": "video",
+      "path": "media/videos/exercises/25_machine-chest-fly-2.mp4",
+      "isDuplicate": false,
+      "checksum": "ca5d8f18ef13624d8263886e467ee44154f8799c7d3cad9cf6a6ee67ddc7a3bd",
+      "role": "single",
+      "exerciseSlugs": [
+        "aperturas"
+      ]
     },
     {
       "id": "video-26",
-      "file": "media/videos/exercises/26_rack-pull.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.22.mp4",
-      "sha256": "5c93e86411f183ebc7e7bf6f22600c2fe68108aec51950723f63ce2f66d1fca5",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "rack-pull"
-    },
-    {
-      "id": "video-27",
-      "file": "media/videos/archive/duplicates/dup_27_dominadas.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.23 (1).mp4",
-      "sha256": "4c7d0279d6cd16c32d5a1e15caefaff1f81a70fda2f4f8e2cb0ca61bce550952",
-      "is_duplicate": true,
-      "canonical_of": "video-10",
-      "exercise_slug": "dominadas"
+      "title": "Lying Leg Curl",
+      "slug": "lying-leg-curl",
+      "type": "video",
+      "path": "media/videos/exercises/26_lying-leg-curl.mp4",
+      "isDuplicate": false,
+      "checksum": "5c93e86411f183ebc7e7bf6f22600c2fe68108aec51950723f63ce2f66d1fca5",
+      "role": "single",
+      "exerciseSlugs": [
+        "curl-femoral"
+      ]
     },
     {
       "id": "video-28",
-      "file": "media/videos/exercises/28_jalon-al-pecho-2.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.23 (2).mp4",
-      "sha256": "96c18d2fddadc733374d2b36489c1eaef53fccd98dfe5bce085b5a4abc6865ff",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "jalon-al-pecho-2"
+      "title": "Db Lunges",
+      "slug": "db-lunges",
+      "type": "video",
+      "path": "media/videos/exercises/28_db-lunges.mp4",
+      "isDuplicate": false,
+      "checksum": "96c18d2fddadc733374d2b36489c1eaef53fccd98dfe5bce085b5a4abc6865ff",
+      "role": "single",
+      "exerciseSlugs": [
+        "zancadas"
+      ]
     },
     {
       "id": "video-29",
-      "file": "media/videos/exercises/29_peso-muerto-2.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.23 (3).mp4",
-      "sha256": "c782105052155aece33e1cb2b7e061b1938a5b736adabc50de5f209bd79073f5",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "peso-muerto-2"
+      "title": "Delt Exercises",
+      "slug": "delt-exercises",
+      "type": "video",
+      "path": "media/videos/exercises/29_delt-exercises.mp4",
+      "isDuplicate": false,
+      "checksum": "c782105052155aece33e1cb2b7e061b1938a5b736adabc50de5f209bd79073f5",
+      "role": "multi",
+      "exerciseSlugs": [
+        "face-pull"
+      ]
     },
     {
       "id": "video-30",
-      "file": "media/videos/exercises/30_remo-en-t-2.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.23.mp4",
-      "sha256": "b0d732fa0f5e2ddbddf55ae1d2c7051279659afa585049ce79e1d4185136124c",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "remo-en-t-2"
+      "title": "Leg Abduction 2",
+      "slug": "leg-abduction-2",
+      "type": "video",
+      "path": "media/videos/exercises/30_leg-abduction-2.mp4",
+      "isDuplicate": false,
+      "checksum": "b0d732fa0f5e2ddbddf55ae1d2c7051279659afa585049ce79e1d4185136124c",
+      "role": "single",
+      "exerciseSlugs": [
+        "maquina-aductores"
+      ]
     },
     {
       "id": "video-31",
-      "file": "media/videos/exercises/31_face-pull-2.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.24 (1).mp4",
-      "sha256": "3e214c03aa53533f3085af16e65a5346b2438c0c8d606bc0b948f3ada77b8be0",
-      "is_duplicate": false,
-      "canonical_of": null,
-      "exercise_slug": "face-pull-2"
+      "title": "Delt Exercises 2",
+      "slug": "delt-exercises-2",
+      "type": "video",
+      "path": "media/videos/exercises/31_delt-exercises-2.mp4",
+      "isDuplicate": false,
+      "checksum": "3e214c03aa53533f3085af16e65a5346b2438c0c8d606bc0b948f3ada77b8be0",
+      "role": "multi",
+      "exerciseSlugs": [
+        "face-pull"
+      ]
+    },
+    {
+      "id": "video-19",
+      "title": "Remo En T",
+      "slug": "remo-en-t",
+      "type": "video",
+      "path": "media/videos/archive/duplicates/dup_19_remo-en-t.mp4",
+      "isDuplicate": true,
+      "checksum": "8fb3540354e52a86bc9a98dc7634a1645cae61d253c24fb21e627ff8f98e276d",
+      "role": "single",
+      "exerciseSlugs": []
+    },
+    {
+      "id": "video-21",
+      "title": "Face Pull Rotacion Externa",
+      "slug": "face-pull-rotacion-externa",
+      "type": "video",
+      "path": "media/videos/archive/duplicates/dup_21_face-pull-rotacion-externa.mp4",
+      "isDuplicate": true,
+      "checksum": "ff53838e12655bdae2a7b0c944201daa27b5816eba6c427280eff4a8be91026f",
+      "role": "single",
+      "exerciseSlugs": []
+    },
+    {
+      "id": "video-27",
+      "title": "Dominadas",
+      "slug": "dominadas",
+      "type": "video",
+      "path": "media/videos/archive/duplicates/dup_27_dominadas.mp4",
+      "isDuplicate": true,
+      "checksum": "4c7d0279d6cd16c32d5a1e15caefaff1f81a70fda2f4f8e2cb0ca61bce550952",
+      "role": "single",
+      "exerciseSlugs": []
     },
     {
       "id": "video-32",
-      "file": "media/videos/archive/duplicates/dup_32_zancadas-2.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.24 (2).mp4",
-      "sha256": "2d89b3043e914b824a7978a8d952b40b03d68962a7115b9595e31a339a4c20de",
-      "is_duplicate": true,
-      "canonical_of": "video-22",
-      "exercise_slug": "zancadas-2"
+      "title": "Zancadas 2",
+      "slug": "zancadas-2",
+      "type": "video",
+      "path": "media/videos/archive/duplicates/dup_32_zancadas-2.mp4",
+      "isDuplicate": true,
+      "checksum": "2d89b3043e914b824a7978a8d952b40b03d68962a7115b9595e31a339a4c20de",
+      "role": "single",
+      "exerciseSlugs": []
     },
     {
       "id": "video-33",
-      "file": "media/videos/archive/duplicates/dup_33_prensa-2.mp4",
-      "original_name": "WhatsApp Video 2026-03-03 at 21.55.24.mp4",
-      "sha256": "4f8f2c09dc1dfd76427316587b1743180e41ea14d40f499002cd939e2c6df214",
-      "is_duplicate": true,
-      "canonical_of": "video-05",
-      "exercise_slug": "prensa-2"
+      "title": "Prensa 2",
+      "slug": "prensa-2",
+      "type": "video",
+      "path": "media/videos/archive/duplicates/dup_33_prensa-2.mp4",
+      "isDuplicate": true,
+      "checksum": "4f8f2c09dc1dfd76427316587b1743180e41ea14d40f499002cd939e2c6df214",
+      "role": "single",
+      "exerciseSlugs": []
     }
   ]
 }

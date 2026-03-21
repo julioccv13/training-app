@@ -37,6 +37,159 @@ SLUG_TO_EXERCISE_SLUGS = {
     'upper-body-exercises-1': ['face-pull', 'remo-con-mancuernas', 'jalon-al-pecho'],
 }
 
+IMAGE_META_BY_REL = {
+    'rutina-principal/upper-body/01_dominadas_asistidas.jpeg': {
+        'title': 'Rutina Principal Upper Body - Dominadas Asistidas',
+        'slug': 'rutina-principal-upper-body-dominadas-asistidas',
+        'exerciseSlugs': ['principal-dominadas-asistidas-opcional'],
+    },
+    'rutina-principal/upper-body/02_remo_alto_hammer.jpeg': {
+        'title': 'Rutina Principal Upper Body - Remo Alto Hammer',
+        'slug': 'rutina-principal-upper-body-remo-alto-hammer',
+        'exerciseSlugs': ['principal-remo-alto-hammer-opcional'],
+    },
+    'rutina-principal/upper-body/03_remo_cerrado_polea_sentado.jpeg': {
+        'title': 'Rutina Principal Upper Body - Remo Cerrado Polea Sentado',
+        'slug': 'rutina-principal-upper-body-remo-cerrado-polea-sentado',
+        'exerciseSlugs': ['principal-remo-sentado-maquina'],
+    },
+    'rutina-principal/upper-body/04_jalon_en_polea_al_pecho.jpeg': {
+        'title': 'Rutina Principal Upper Body - Jalon En Polea Al Pecho',
+        'slug': 'rutina-principal-upper-body-jalon-en-polea-al-pecho',
+        'exerciseSlugs': ['principal-jalon-en-maquina'],
+    },
+    'rutina-principal/upper-body/05_curl_de_biceps_en_maquina_inclinada.jpeg': {
+        'title': 'Rutina Principal Upper Body - Curl De Biceps En Maquina Inclinada',
+        'slug': 'rutina-principal-upper-body-curl-de-biceps-en-maquina-inclinada',
+        'exerciseSlugs': ['principal-curl-de-biceps-en-maquina'],
+    },
+    'rutina-principal/upper-body/06_curl_de_biceps_en_maquina_predicador.jpeg': {
+        'title': 'Rutina Principal Upper Body - Curl De Biceps En Maquina Predicador',
+        'slug': 'rutina-principal-upper-body-curl-de-biceps-en-maquina-predicador',
+        'exerciseSlugs': ['principal-curl-de-biceps-en-maquina'],
+    },
+    'rutina-principal/upper-body/07_curl_de_muneca_en_maquina_o_polea.jpeg': {
+        'title': 'Rutina Principal Upper Body - Curl De Muneca En Maquina O Polea',
+        'slug': 'rutina-principal-upper-body-curl-de-muneca-en-maquina-o-polea',
+        'exerciseSlugs': ['principal-curl-de-muneca-opcional'],
+    },
+    'rutina-principal/upper-body/08_rotacion_interna_de_hombro_en_polea.jpeg': {
+        'title': 'Rutina Principal Upper Body - Rotacion Interna De Hombro En Polea',
+        'slug': 'rutina-principal-upper-body-rotacion-interna-de-hombro-en-polea',
+        'exerciseSlugs': ['principal-rotacion-interna-opcional'],
+    },
+    'rutina-principal/upper-body/09_rotacion_externa_de_hombro_en_polea.jpeg': {
+        'title': 'Rutina Principal Upper Body - Rotacion Externa De Hombro En Polea',
+        'slug': 'rutina-principal-upper-body-rotacion-externa-de-hombro-en-polea',
+        'exerciseSlugs': ['principal-rotacion-externa-opcional'],
+    },
+    'rutina-principal/upper-body/10_elevaciones_laterales_maquina.jpeg': {
+        'title': 'Rutina Principal Upper Body - Elevaciones Laterales Maquina',
+        'slug': 'rutina-principal-upper-body-elevaciones-laterales-maquina',
+        'exerciseSlugs': ['principal-elevaciones-laterales-maquina'],
+    },
+    'rutina-principal/upper-body/11_press_inclinado_en_maquina.jpeg': {
+        'title': 'Rutina Principal Upper Body - Press Inclinado En Maquina',
+        'slug': 'rutina-principal-upper-body-press-inclinado-en-maquina',
+        'exerciseSlugs': ['principal-press-inclinado-en-maquina'],
+    },
+    'rutina-principal/upper-body/12_press_de_pecho_sentado_maquina.jpeg': {
+        'title': 'Rutina Principal Upper Body - Press De Pecho Sentado Maquina',
+        'slug': 'rutina-principal-upper-body-press-de-pecho-sentado-maquina',
+        'exerciseSlugs': ['principal-press-de-pecho-sentado-en-maquina'],
+    },
+    'rutina-principal/upper-body/13_aperturas_pectoral_maquina_pec_deck.jpeg': {
+        'title': 'Rutina Principal Upper Body - Aperturas Pectoral Maquina Pec Deck',
+        'slug': 'rutina-principal-upper-body-aperturas-pectoral-maquina-pec-deck',
+        'exerciseSlugs': ['principal-aperturas-pectoral-opcional'],
+    },
+    'rutina-principal/upper-body/14_press_de_hombro_en_maquina.jpeg': {
+        'title': 'Rutina Principal Upper Body - Press De Hombro En Maquina',
+        'slug': 'rutina-principal-upper-body-press-de-hombro-en-maquina',
+        'exerciseSlugs': ['principal-press-de-hombro-opcional'],
+    },
+    'rutina-principal/upper-body/15_fondos_asistidos.jpeg': {
+        'title': 'Rutina Principal Upper Body - Fondos Asistidos',
+        'slug': 'rutina-principal-upper-body-fondos-asistidos',
+        'exerciseSlugs': ['principal-fondos-asistidos-opcional'],
+    },
+    'rutina-principal/upper-body/16_extension_de_triceps_en_maquina_o_polea.jpeg': {
+        'title': 'Rutina Principal Upper Body - Extension De Triceps En Maquina O Polea',
+        'slug': 'rutina-principal-upper-body-extension-de-triceps-en-maquina-o-polea',
+        'exerciseSlugs': ['principal-extension-de-triceps-opcional'],
+    },
+    'rutina-principal/upper-body/17_pushdown_de_triceps_en_polea.jpeg': {
+        'title': 'Rutina Principal Upper Body - Pushdown De Triceps En Polea',
+        'slug': 'rutina-principal-upper-body-pushdown-de-triceps-en-polea',
+        'exerciseSlugs': ['principal-pushdown-de-triceps-en-polea'],
+    },
+    'rutina-principal/lower-body/01_aduccion_de_cadera_maquina.jpeg': {
+        'title': 'Rutina Principal Lower Body - Aduccion De Cadera Maquina',
+        'slug': 'rutina-principal-lower-body-aduccion-de-cadera-maquina',
+        'exerciseSlugs': ['principal-aduccion-de-cadera-en-maquina'],
+    },
+    'rutina-principal/lower-body/02_prensa_inclinada.jpeg': {
+        'title': 'Rutina Principal Lower Body - Prensa Inclinada',
+        'slug': 'rutina-principal-lower-body-prensa-inclinada',
+        'exerciseSlugs': ['principal-prensa-inclinada'],
+    },
+    'rutina-principal/lower-body/03_hack_squat_con_apoyo_lumbar.jpeg': {
+        'title': 'Rutina Principal Lower Body - Hack Squat Con Apoyo Lumbar',
+        'slug': 'rutina-principal-lower-body-hack-squat-con-apoyo-lumbar',
+        'exerciseSlugs': ['principal-hack-squat-opcional'],
+    },
+    'rutina-principal/lower-body/04_extension_de_rodilla_maquina.jpeg': {
+        'title': 'Rutina Principal Lower Body - Extension De Rodilla Maquina',
+        'slug': 'rutina-principal-lower-body-extension-de-rodilla-maquina',
+        'exerciseSlugs': ['principal-extension-de-rodilla-en-maquina'],
+    },
+    'rutina-principal/lower-body/05_extension_lumbar_en_banco_horizontal.jpeg': {
+        'title': 'Rutina Principal Lower Body - Extension Lumbar En Banco Horizontal',
+        'slug': 'rutina-principal-lower-body-extension-lumbar-en-banco-horizontal',
+        'exerciseSlugs': ['principal-extension-lumbar-opcional'],
+    },
+    'rutina-principal/lower-body/06_extension_lumbar_en_banco_horizontal_2.jpeg': {
+        'title': 'Rutina Principal Lower Body - Extension Lumbar En Banco Horizontal 2',
+        'slug': 'rutina-principal-lower-body-extension-lumbar-en-banco-horizontal-2',
+        'exerciseSlugs': ['principal-extension-lumbar-opcional'],
+    },
+    'rutina-principal/lower-body/07_aduccion_de_cadera_maquina_2.jpeg': {
+        'title': 'Rutina Principal Lower Body - Aduccion De Cadera Maquina 2',
+        'slug': 'rutina-principal-lower-body-aduccion-de-cadera-maquina-2',
+        'exerciseSlugs': ['principal-aduccion-de-cadera-en-maquina'],
+    },
+    'rutina-principal/lower-body/08_abduccion_de_cadera_maquina.jpeg': {
+        'title': 'Rutina Principal Lower Body - Abduccion De Cadera Maquina',
+        'slug': 'rutina-principal-lower-body-abduccion-de-cadera-maquina',
+        'exerciseSlugs': ['principal-abduccion-de-cadera-en-maquina'],
+    },
+    'rutina-principal/lower-body/09_flexion_de_rodilla_sentado_maquina.jpeg': {
+        'title': 'Rutina Principal Lower Body - Flexion De Rodilla Sentado Maquina',
+        'slug': 'rutina-principal-lower-body-flexion-de-rodilla-sentado-maquina',
+        'exerciseSlugs': ['principal-curl-femoral-sentado-en-maquina'],
+    },
+    'rutina-principal/lower-body/10_extension_de_rodilla_maquina_2.jpeg': {
+        'title': 'Rutina Principal Lower Body - Extension De Rodilla Maquina 2',
+        'slug': 'rutina-principal-lower-body-extension-de-rodilla-maquina-2',
+        'exerciseSlugs': ['principal-extension-de-rodilla-en-maquina'],
+    },
+    'rutina-principal/lower-body/11_prensa_inclinada_2.jpeg': {
+        'title': 'Rutina Principal Lower Body - Prensa Inclinada 2',
+        'slug': 'rutina-principal-lower-body-prensa-inclinada-2',
+        'exerciseSlugs': ['principal-prensa-inclinada'],
+    },
+    'rutina-principal/lower-body/12_hip_thrust_en_maquina.jpeg': {
+        'title': 'Rutina Principal Lower Body - Hip Thrust En Maquina',
+        'slug': 'rutina-principal-lower-body-hip-thrust-en-maquina',
+        'exerciseSlugs': ['principal-hip-thrust-opcional'],
+    },
+    'rutina-principal/lower-body/13_crunch_abdominal_sentado_maquina.jpeg': {
+        'title': 'Rutina Principal Lower Body - Crunch Abdominal Sentado Maquina',
+        'slug': 'rutina-principal-lower-body-crunch-abdominal-sentado-maquina',
+        'exerciseSlugs': ['principal-crunch-abdominal-sentado-en-maquina'],
+    },
+}
+
 
 def sha256(path: Path) -> str:
     h = hashlib.sha256()
@@ -48,6 +201,44 @@ def sha256(path: Path) -> str:
 
 def title_case_slug(slug: str) -> str:
     return ' '.join(part.capitalize() for part in slug.replace('-', ' ').split())
+
+
+def normalize_slug(value: str) -> str:
+    return re.sub(r'[^a-z0-9]+', '-', value.lower()).strip('-')
+
+
+def parse_reference_image_meta(path: Path) -> dict:
+    relative = path.relative_to(DOCS_MEDIA_ROOT / 'images' / 'reference')
+    rel = relative.as_posix()
+
+    generic_match = re.fullmatch(r'reference_(\d+)\.jpeg', relative.name)
+    if generic_match:
+        index = generic_match.group(1).zfill(2)
+        return {
+            'id': f'ref-image-{index}',
+            'title': f'Reference {index}',
+            'slug': f'reference-{index}',
+            'exerciseSlugs': [],
+        }
+
+    if rel in IMAGE_META_BY_REL:
+        meta = IMAGE_META_BY_REL[rel]
+        return {
+            'id': f"ref-image-{meta['slug']}",
+            'title': meta['title'],
+            'slug': meta['slug'],
+            'exerciseSlugs': meta['exerciseSlugs'],
+        }
+
+    stem = re.sub(r'^\d+_', '', path.stem)
+    parts = [normalize_slug(part) for part in relative.with_suffix('').parts]
+    slug = '-'.join(part for part in parts if part)
+    return {
+        'id': f'ref-image-{slug}',
+        'title': title_case_slug(stem.replace('_', '-')),
+        'slug': slug,
+        'exerciseSlugs': [],
+    }
 
 
 def parse_video_meta(path: Path, is_duplicate: bool) -> tuple[str, str]:
@@ -75,20 +266,21 @@ def detect_role(media_type: str, slug: str) -> str:
 def build_records() -> list[dict]:
     records: list[dict] = []
 
-    images = sorted((DOCS_MEDIA_ROOT / 'images' / 'reference').glob('*.jpeg'))
-    for idx, path in enumerate(images, start=1):
+    images = sorted((DOCS_MEDIA_ROOT / 'images' / 'reference').rglob('*.jpeg'))
+    for path in images:
         rel = path.relative_to(DOCS_MEDIA_ROOT).as_posix()
+        meta = parse_reference_image_meta(path)
         records.append(
             {
-                'id': f'ref-image-{idx:02d}',
-                'title': f'Reference {idx:02d}',
-                'slug': f'reference-{idx:02d}',
+                'id': meta['id'],
+                'title': meta['title'],
+                'slug': meta['slug'],
                 'type': 'image',
                 'path': f'media/{rel}',
                 'isDuplicate': False,
                 'checksum': sha256(path),
                 'role': 'reference',
-                'exerciseSlugs': [],
+                'exerciseSlugs': meta['exerciseSlugs'],
             }
         )
 

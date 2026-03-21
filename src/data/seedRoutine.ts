@@ -47,6 +47,15 @@ const fiveDayStrengthRoutine: Routine = {
   isArchived: false,
 }
 
+const mainRoutine: Routine = {
+  id: 'routine-main',
+  name: 'Rutina Principal',
+  description: 'Split Upper / Lower basado en referencias visuales, priorizando maquinas y dejando accesorios documentados fuera de la rutina activa.',
+  createdAt: SEED_TIMESTAMP,
+  updatedAt: SEED_TIMESTAMP,
+  isArchived: false,
+}
+
 const dayTemplates: Array<Omit<RoutineDay, 'routineId'>> = [
   { id: 'day-1', name: 'Dia 1', focus: 'Torso A (hombros/espalda)', order: 1 },
   { id: 'day-2', name: 'Dia 2', focus: 'Pierna A (isquios/gluteo)', order: 2 },
@@ -784,6 +793,183 @@ const fiveDayStrengthExerciseTemplates: Array<Omit<RoutineExercise, 'routineId'>
   },
 ]
 
+const mainRoutineDayTemplates: Array<Omit<RoutineDay, 'routineId'>> = [
+  { id: 'main-day-upper', name: 'Upper Body', focus: 'Pecho / espalda / hombro / brazos', order: 1 },
+  { id: 'main-day-lower', name: 'Lower Body', focus: 'Cuadriceps / posterior / cadera / core', order: 2 },
+]
+
+const mainRoutineExerciseTemplates: Array<Omit<RoutineExercise, 'routineId'>> = [
+  {
+    id: 'main-ex-press-inclinado-maquina',
+    dayId: 'main-day-upper',
+    slug: 'principal-press-inclinado-en-maquina',
+    name: 'Press inclinado en maquina',
+    muscleGroup: 'Pecho superior',
+    targetSets: 3,
+    targetReps: '8-12',
+    targetWeight: 0,
+    restSeconds: 90,
+    notes: 'Movimiento principal de pecho. Referencia visual en las imagenes upper body.',
+    order: 1,
+  },
+  {
+    id: 'main-ex-press-pecho-sentado',
+    dayId: 'main-day-upper',
+    slug: 'principal-press-de-pecho-sentado-en-maquina',
+    name: 'Press de pecho sentado en maquina',
+    muscleGroup: 'Pecho',
+    targetSets: 3,
+    targetReps: '8-12',
+    targetWeight: 0,
+    restSeconds: 90,
+    notes: 'Segundo basico de pecho en patron estable.',
+    order: 2,
+  },
+  {
+    id: 'main-ex-jalon-maquina',
+    dayId: 'main-day-upper',
+    slug: 'principal-jalon-en-maquina',
+    name: 'Jalon en maquina',
+    muscleGroup: 'Dorsales',
+    targetSets: 3,
+    targetReps: '8-12',
+    targetWeight: 0,
+    restSeconds: 90,
+    notes: 'Sustituye dominada asistida segun el criterio definido para espalda.',
+    order: 3,
+  },
+  {
+    id: 'main-ex-remo-sentado',
+    dayId: 'main-day-upper',
+    slug: 'principal-remo-sentado-maquina',
+    name: 'Remo sentado en maquina o polea',
+    muscleGroup: 'Espalda media',
+    targetSets: 3,
+    targetReps: '8-12',
+    targetWeight: 0,
+    restSeconds: 90,
+    notes: 'Enfasis en retraccion escapular y recorrido controlado.',
+    order: 4,
+  },
+  {
+    id: 'main-ex-elevaciones-laterales',
+    dayId: 'main-day-upper',
+    slug: 'principal-elevaciones-laterales-maquina',
+    name: 'Elevaciones laterales en maquina',
+    muscleGroup: 'Deltoides lateral',
+    targetSets: 3,
+    targetReps: '10-15',
+    targetWeight: 0,
+    restSeconds: 60,
+    notes: 'Trabajo principal de hombro dentro del bloque activo.',
+    order: 5,
+  },
+  {
+    id: 'main-ex-curl-biceps-maquina',
+    dayId: 'main-day-upper',
+    slug: 'principal-curl-de-biceps-en-maquina',
+    name: 'Curl de biceps en maquina',
+    muscleGroup: 'Biceps',
+    targetSets: 3,
+    targetReps: '10-15',
+    targetWeight: 0,
+    restSeconds: 60,
+    notes: 'Puede ejecutarse en variante inclinada o predicador segun la maquina disponible.',
+    order: 6,
+  },
+  {
+    id: 'main-ex-pushdown-triceps',
+    dayId: 'main-day-upper',
+    slug: 'principal-pushdown-de-triceps-en-polea',
+    name: 'Pushdown de triceps en polea',
+    muscleGroup: 'Triceps',
+    targetSets: 3,
+    targetReps: '10-15',
+    targetWeight: 0,
+    restSeconds: 60,
+    notes: 'Se deja como unico trabajo principal de triceps.',
+    order: 7,
+  },
+  {
+    id: 'main-ex-prensa-inclinada',
+    dayId: 'main-day-lower',
+    slug: 'principal-prensa-inclinada',
+    name: 'Prensa inclinada',
+    muscleGroup: 'Cuadriceps',
+    targetSets: 3,
+    targetReps: '8-12',
+    targetWeight: 0,
+    restSeconds: 90,
+    notes: 'Primer basico de lower para cuadriceps.',
+    order: 1,
+  },
+  {
+    id: 'main-ex-extension-rodilla',
+    dayId: 'main-day-lower',
+    slug: 'principal-extension-de-rodilla-en-maquina',
+    name: 'Extension de rodilla en maquina',
+    muscleGroup: 'Cuadriceps',
+    targetSets: 3,
+    targetReps: '10-15',
+    targetWeight: 0,
+    restSeconds: 60,
+    notes: 'Complemento de cuadriceps con recorrido controlado.',
+    order: 2,
+  },
+  {
+    id: 'main-ex-curl-femoral',
+    dayId: 'main-day-lower',
+    slug: 'principal-curl-femoral-sentado-en-maquina',
+    name: 'Curl femoral sentado en maquina',
+    muscleGroup: 'Posterior / gluteo',
+    targetSets: 3,
+    targetReps: '10-15',
+    targetWeight: 0,
+    restSeconds: 75,
+    notes: 'Se deja como unico ejercicio activo para gluteo/posterior segun la instruccion recibida.',
+    order: 3,
+  },
+  {
+    id: 'main-ex-aduccion-cadera',
+    dayId: 'main-day-lower',
+    slug: 'principal-aduccion-de-cadera-en-maquina',
+    name: 'Aduccion de cadera en maquina',
+    muscleGroup: 'Aductores',
+    targetSets: 2,
+    targetReps: '12-15',
+    targetWeight: 0,
+    restSeconds: 60,
+    notes: 'Complementario de cadera dentro del bloque lower.',
+    order: 4,
+  },
+  {
+    id: 'main-ex-abduccion-cadera',
+    dayId: 'main-day-lower',
+    slug: 'principal-abduccion-de-cadera-en-maquina',
+    name: 'Abduccion de cadera en maquina',
+    muscleGroup: 'Abductores',
+    targetSets: 2,
+    targetReps: '12-15',
+    targetWeight: 0,
+    restSeconds: 60,
+    notes: 'Complementario de cadera, sin convertirlo en bloque accesorio extra.',
+    order: 5,
+  },
+  {
+    id: 'main-ex-crunch-abdominal',
+    dayId: 'main-day-lower',
+    slug: 'principal-crunch-abdominal-sentado-en-maquina',
+    name: 'Crunch abdominal sentado en maquina',
+    muscleGroup: 'Core',
+    targetSets: 2,
+    targetReps: '12-20',
+    targetWeight: 0,
+    restSeconds: 45,
+    notes: 'Trabajo de core simple y estable para cerrar lower.',
+    order: 6,
+  },
+]
+
 const fiveDayStrengthSeedDays: RoutineDay[] = fiveDayStrengthDayTemplates.map((day) => ({
   ...day,
   routineId: fiveDayStrengthRoutine.id,
@@ -792,6 +978,16 @@ const fiveDayStrengthSeedDays: RoutineDay[] = fiveDayStrengthDayTemplates.map((d
 const fiveDayStrengthSeedExercises: RoutineExercise[] = fiveDayStrengthExerciseTemplates.map((exercise) => ({
   ...exercise,
   routineId: fiveDayStrengthRoutine.id,
+}))
+
+const mainRoutineSeedDays: RoutineDay[] = mainRoutineDayTemplates.map((day) => ({
+  ...day,
+  routineId: mainRoutine.id,
+}))
+
+const mainRoutineSeedExercises: RoutineExercise[] = mainRoutineExerciseTemplates.map((exercise) => ({
+  ...exercise,
+  routineId: mainRoutine.id,
 }))
 
 const builtInRoutineSeeds = [
@@ -804,6 +1000,11 @@ const builtInRoutineSeeds = [
     routine: fiveDayStrengthRoutine,
     days: fiveDayStrengthSeedDays,
     exercises: fiveDayStrengthSeedExercises,
+  },
+  {
+    routine: mainRoutine,
+    days: mainRoutineSeedDays,
+    exercises: mainRoutineSeedExercises,
   },
 ]
 
