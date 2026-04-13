@@ -1,13 +1,13 @@
 # Training App (PWA)
 
-PWA mobile-first para iPhone (Safari + Add to Home Screen) con rutinas multiples, tracking por dia y biblioteca de media desacoplada del flujo de entrenamiento.
+PWA mobile-first para iPhone (Safari + Add to Home Screen) con flujo guiado de entrenamiento: abres la app, ves la rutina activa, qué hiciste la última vez y qué día sigue.
 
 ## Objetivo
-- Permitir varias rutinas en un mismo dispositivo.
-- Recordar la rutina activa del dispositivo y pedir confirmacion antes de cambiarla.
+- Mostrar al abrir la app la rutina activa, el ultimo dia entrenado y el siguiente dia sugerido.
+- Permitir cambiar la rutina activa del dispositivo con confirmacion si el lock esta activo.
 - Registrar sets/reps/peso/notas por rutina y por dia.
-- Mantener media local y externa para consulta rapida.
-- Incluir rutinas base preconfiguradas (ejemplo: `Workout Tracker Split`).
+- Mostrar por ejercicio la ultima carga registrada, el peso sugerido por e1RM y una imagen explicativa fija.
+- Incluir rutinas base preconfiguradas.
 
 ## Stack
 - React 19 + Vite 7 + TypeScript
@@ -36,11 +36,11 @@ npm run build
 ```
 
 ## Flujo de uso (app)
-1. En `Rutinas`, selecciona la rutina activa del dispositivo.
-2. Si cambias a otra rutina, la app pedira confirmacion (lock por dispositivo).
-3. Edita dias y ejercicios desde `Rutinas`.
-4. Registra entrenamiento en `Track` seleccionando dia.
-5. Consulta media en `Media` (local + internet).
+1. En `Inicio`, revisa la rutina activa, el ultimo dia entrenado y el dia sugerido.
+2. Abre el dia sugerido o cualquier otro dia disponible de la rutina.
+3. En `Entreno`, registra sets/reps/peso con referencia al ultimo peso usado y al peso sugerido por e1RM.
+4. Guarda la sesion del dia para que la portada actualice automaticamente el siguiente paso.
+5. Usa `Ajustes` para unidades, escala, lock, backup e importacion.
 
 ## Objetivos dinamicos con e1RM
 - La app calcula e1RM por ejercicio desde logs de la rutina activa.
@@ -69,16 +69,14 @@ npm run build
 ```
 5. Commit + push para desplegar.
 
-## Crear/editar rutinas desde la app
-- `Rutinas > Crear rutina desde cero`.
-- Edita nombre/descripcion de la rutina activa.
-- Agrega/edita/elimina dias.
-- Agrega/edita/elimina ejercicios por dia.
+## Rutinas desde la app
+- La app mantiene cambio de rutina activa desde la UI.
+- La edicion simple de rutinas queda pendiente como mejora futura; por ahora la gestion estructural sigue siendo por codigo.
 
-## Media: local + internet
-- Busqueda local por nombre/tags/proveedor/url.
-- Busqueda internet en Openverse + Wikimedia Commons.
-- Resultado externo se guarda como URL en biblioteca (sin descargar binario al navegador).
+## Imagenes de ejercicios
+- La app resuelve una imagen principal por ejercicio.
+- Si no existe una coincidencia local, intenta buscar automaticamente una referencia en Openverse o Wikimedia Commons y la guarda como media externa.
+- El backup conserva estas referencias para no volver a buscarlas en cada dispositivo.
 
 ## Dejar media externa permanente en el repo (pin manual)
 - Opcion manual por codigo: descargar el recurso y versionarlo en `public/media/`.

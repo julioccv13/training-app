@@ -21,46 +21,33 @@ import {
   roundTrainingLoad,
   sortDays,
   sortExercises,
-  toSlug,
-  toTitle,
 } from './lib/helpers'
-import { searchInternetMedia, type InternetMediaResult } from './lib/mediaSearch'
+import { searchInternetMedia } from './lib/mediaSearch'
 import { downloadJson, loadJson, readJsonFile, saveJson } from './lib/storage'
+import {
+  buildLastPerformanceByExercise,
+  buildRecentSessions,
+  getSuggestedDay,
+  resolveExerciseMedia,
+  type ExerciseLastPerformance,
+} from './lib/trainingInsights'
 import type {
   AppSettings,
   FontScale,
   MediaItem,
-  MediaRole,
-  MediaType,
-  Routine,
   RoutineBundle,
-  RoutineDay,
   RoutineExercise,
   WorkoutLog,
   WorkoutSet,
 } from './types/training'
 
-type TabKey = 'dashboard' | 'routines' | 'workout' | 'media' | 'settings'
+type TabKey = 'home' | 'train' | 'settings'
 type WorkoutDraft = Record<string, { sets: WorkoutSet[]; notes: string }>
-type MediaTypeFilter = 'all' | MediaType
-type MediaOriginFilter = 'all' | 'local' | 'external'
 type ExerciseE1rmMeta = {
   e1rm: number
   sampleCount: number
   anchorReps: number | null
   suggestedWeight: number | null
-}
-type SessionExerciseSummary = {
-  exerciseName: string
-  setCount: number
-}
-type SessionSummary = {
-  id: string
-  createdAt: string
-  dayName: string
-  exerciseCount: number
-  totalSets: number
-  exercises: SessionExerciseSummary[]
 }
 
 type ImportPayload = {
@@ -72,10 +59,8 @@ type ImportPayload = {
 }
 
 const tabs: Array<{ key: TabKey; label: string; iconPath: string }> = [
-  { key: 'dashboard', label: 'Inicio', iconPath: 'icons/pixel/home.svg' },
-  { key: 'routines', label: 'Rutinas', iconPath: 'icons/pixel/clipboard.svg' },
-  { key: 'workout', label: 'Track', iconPath: 'icons/pixel/chart.svg' },
-  { key: 'media', label: 'Media', iconPath: 'icons/pixel/image.svg' },
+  { key: 'home', label: 'Inicio', iconPath: 'icons/pixel/home.svg' },
+  { key: 'train', label: 'Entreno', iconPath: 'icons/pixel/chart.svg' },
   { key: 'settings', label: 'Ajustes', iconPath: 'icons/pixel/settings-cog.svg' },
 ]
 
@@ -169,37 +154,40 @@ const buildInitialState = (): {
   return { routineBundle, media, logs, settings }
 }
 
+const createDraftForExercise = (
+  exercise: RoutineExercise,
+  lastPerformance: ExerciseLastPerformance | undefined,
+  suggestedWeight: number | null,
+): { sets: WorkoutSet[]; notes: string } => {
+  const prefilledWeight = lastPerformance?.lastWeight ?? suggestedWeight ?? exercise.targetWeight
+
+  return {
+    sets: Array.from({ length: Math.max(exercise.targetSets, 1) }, () => ({
+      ...emptyWorkoutSet(),
+      weight: prefilledWeight > 0 ? prefilledWeight : 0,
+    })),
+    notes: '',
+  }
+}
+
+const formatSessionTimestamp = (value: string): string =>
+  new Date(value).toLocaleString('es-CO', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  })
+
 function App() {
   const initialState = useMemo(buildInitialState, [])
 
-  const [activeTab, setActiveTab] = useState<TabKey>('dashboard')
+  const [activeTab, setActiveTab] = useState<TabKey>('home')
   const [routineBundle, setRoutineBundle] = useState<RoutineBundle>(initialState.routineBundle)
   const [media, setMedia] = useState<MediaItem[]>(initialState.media)
   const [logs, setLogs] = useState<WorkoutLog[]>(initialState.logs)
   const [settings, setSettings] = useState<AppSettings>(initialState.settings)
-
-  const [routineEditorDayId, setRoutineEditorDayId] = useState<string>('')
   const [trackDayId, setTrackDayId] = useState<string>('')
-
-  const [newRoutineName, setNewRoutineName] = useState('')
-  const [newRoutineDescription, setNewRoutineDescription] = useState('')
-  const [newDayName, setNewDayName] = useState('')
-  const [newDayFocus, setNewDayFocus] = useState('')
-  const [newExerciseName, setNewExerciseName] = useState('')
-  const [newExerciseGroup, setNewExerciseGroup] = useState('')
-
   const [workoutDraft, setWorkoutDraft] = useState<WorkoutDraft>({})
   const [uiMessage, setUiMessage] = useState('')
-
-  const [mediaSearchTerm, setMediaSearchTerm] = useState('')
-  const [mediaTypeFilter, setMediaTypeFilter] = useState<MediaTypeFilter>('all')
-  const [mediaOriginFilter, setMediaOriginFilter] = useState<MediaOriginFilter>('all')
-
-  const [internetQuery, setInternetQuery] = useState('')
-  const [internetResults, setInternetResults] = useState<InternetMediaResult[]>([])
-  const [internetLoading, setInternetLoading] = useState(false)
-  const [internetError, setInternetError] = useState('')
-  const [internetNotice, setInternetNotice] = useState('')
+  const [imageSearchState, setImageSearchState] = useState<Record<string, 'idle' | 'loading' | 'done' | 'failed'>>({})
 
   useEffect(() => {
     saveJson(STORAGE_KEYS.routine, routineBundle)
@@ -266,64 +254,155 @@ function App() {
     [routineBundle.days, activeRoutineId],
   )
 
-  const allExercisesForActiveRoutine = useMemo(
-    () => routineBundle.exercises.filter((exercise) => exercise.routineId === activeRoutineId),
-    [routineBundle.exercises, activeRoutineId],
-  )
-
   const exercisesByDay = useMemo(() => {
     const map = new Map<string, RoutineExercise[]>()
+    const routineExercises = routineBundle.exercises.filter((exercise) => exercise.routineId === activeRoutineId)
     routineDays.forEach((day) => {
-      map.set(
-        day.id,
-        sortExercises(allExercisesForActiveRoutine.filter((exercise) => exercise.dayId === day.id)),
-      )
+      map.set(day.id, sortExercises(routineExercises.filter((exercise) => exercise.dayId === day.id)))
     })
     return map
-  }, [routineDays, allExercisesForActiveRoutine])
+  }, [routineBundle.exercises, routineDays, activeRoutineId])
+
+  const allExercisesForActiveRoutine = useMemo(
+    () => routineDays.flatMap((day) => exercisesByDay.get(day.id) ?? []),
+    [routineDays, exercisesByDay],
+  )
+
+  const logsForActiveRoutine = useMemo(
+    () => logs.filter((log) => log.routineId === activeRoutineId),
+    [logs, activeRoutineId],
+  )
+
+  const recentSessions = useMemo(() => buildRecentSessions(logsForActiveRoutine), [logsForActiveRoutine])
+  const lastSession = recentSessions[0] ?? null
+  const suggestedDay = useMemo(() => getSuggestedDay(routineDays, lastSession), [routineDays, lastSession])
 
   useEffect(() => {
     if (routineDays.length === 0) {
-      setRoutineEditorDayId('')
       setTrackDayId('')
       return
     }
 
-    if (!routineDays.some((day) => day.id === routineEditorDayId)) {
-      setRoutineEditorDayId(routineDays[0].id)
-    }
-
     if (!routineDays.some((day) => day.id === trackDayId)) {
-      setTrackDayId(routineDays[0].id)
+      setTrackDayId(suggestedDay?.id ?? routineDays[0].id)
     }
-  }, [routineDays, routineEditorDayId, trackDayId])
+  }, [routineDays, trackDayId, suggestedDay])
 
-  const routineEditorDay = routineDays.find((day) => day.id === routineEditorDayId) ?? null
-  const trackDay = routineDays.find((day) => day.id === trackDayId) ?? null
-
-  const editorExercises = useMemo(
-    () => exercisesByDay.get(routineEditorDayId) ?? [],
-    [exercisesByDay, routineEditorDayId],
-  )
+  const trackDay = routineDays.find((day) => day.id === trackDayId) ?? suggestedDay ?? routineDays[0] ?? null
   const trackExercises = useMemo(
-    () => exercisesByDay.get(trackDayId) ?? [],
-    [exercisesByDay, trackDayId],
+    () => (trackDay ? exercisesByDay.get(trackDay.id) ?? [] : []),
+    [exercisesByDay, trackDay],
   )
+
+  const lastPerformanceByExercise = useMemo(
+    () => buildLastPerformanceByExercise(logsForActiveRoutine),
+    [logsForActiveRoutine],
+  )
+
+  const e1rmByExercise = useMemo(
+    () => buildE1rmMetaByExercise(logsForActiveRoutine, allExercisesForActiveRoutine, settings.units),
+    [logsForActiveRoutine, allExercisesForActiveRoutine, settings.units],
+  )
+
+  const exerciseMediaById = useMemo(() => {
+    const map = new Map<string, MediaItem | null>()
+    allExercisesForActiveRoutine.forEach((exercise) => {
+      map.set(exercise.id, resolveExerciseMedia(exercise, media))
+    })
+    return map
+  }, [allExercisesForActiveRoutine, media])
 
   useEffect(() => {
     setWorkoutDraft((prev) => {
       const next = { ...prev }
+
       trackExercises.forEach((exercise) => {
-        if (!next[exercise.id]) {
-          next[exercise.id] = {
-            sets: Array.from({ length: Math.max(exercise.targetSets, 1) }, emptyWorkoutSet),
-            notes: '',
-          }
+        if (next[exercise.id]) {
+          return
         }
+
+        next[exercise.id] = createDraftForExercise(
+          exercise,
+          lastPerformanceByExercise.get(exercise.id),
+          e1rmByExercise.get(exercise.id)?.suggestedWeight ?? null,
+        )
       })
+
       return next
     })
-  }, [trackExercises])
+  }, [trackExercises, lastPerformanceByExercise, e1rmByExercise])
+
+  useEffect(() => {
+    const missingExercise = trackExercises.find((exercise) => {
+      if (exerciseMediaById.get(exercise.id)) {
+        return false
+      }
+
+      const state = imageSearchState[exercise.id] ?? 'idle'
+      return state !== 'loading' && state !== 'done' && state !== 'failed'
+    })
+
+    if (!missingExercise) {
+      return
+    }
+
+    let cancelled = false
+    setImageSearchState((prev) => ({ ...prev, [missingExercise.id]: 'loading' }))
+
+    const query = `${missingExercise.name} exercise form`
+
+    searchInternetMedia(query)
+      .then((results) => {
+        if (cancelled) {
+          return
+        }
+
+        const imageResult = results.find((result) => result.type === 'image')
+        if (!imageResult) {
+          setImageSearchState((prev) => ({ ...prev, [missingExercise.id]: 'failed' }))
+          return
+        }
+
+        setMedia((current) => {
+          const existingMatch = resolveExerciseMedia(missingExercise, current)
+          if (existingMatch) {
+            return current
+          }
+
+          const item: MediaItem = {
+            id: `auto-image-${missingExercise.id}`,
+            title: imageResult.title || missingExercise.name,
+            slug: `${missingExercise.slug}-guide`,
+            type: 'image',
+            role: 'single',
+            origin: 'external',
+            provider: imageResult.provider,
+            path: null,
+            externalUrl: imageResult.url,
+            thumbnailUrl: imageResult.thumbnailUrl,
+            license: imageResult.license,
+            attribution: imageResult.attribution,
+            tags: Array.from(new Set([missingExercise.slug, missingExercise.name, ...imageResult.tags])),
+            isDuplicate: false,
+            checksum: null,
+            createdAt: new Date().toISOString(),
+          }
+
+          return [item, ...current]
+        })
+
+        setImageSearchState((prev) => ({ ...prev, [missingExercise.id]: 'done' }))
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setImageSearchState((prev) => ({ ...prev, [missingExercise.id]: 'failed' }))
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [trackExercises, exerciseMediaById, imageSearchState])
 
   const requestRoutineChange = (nextRoutineId: string, reason: 'manual' | 'system' = 'manual'): boolean => {
     if (!nextRoutineId || nextRoutineId === settings.selectedRoutineId) {
@@ -337,7 +416,7 @@ function App() {
 
     if (shouldConfirm) {
       const ok = window.confirm(
-        'Cambiar la rutina activa de este dispositivo puede mezclar el flujo de tracking. Quieres cambiar la rutina que estas registrando?',
+        'Cambiar la rutina activa de este dispositivo puede alterar tu seguimiento. Quieres cambiar la rutina que estas registrando?',
       )
       if (!ok) {
         return false
@@ -350,214 +429,10 @@ function App() {
       routineLockConfirmedAt: new Date().toISOString(),
     }))
 
+    setTrackDayId('')
+    setWorkoutDraft({})
+    setUiMessage('Rutina activa actualizada para este dispositivo.')
     return true
-  }
-
-  const updateRoutineBundle = (updater: (current: RoutineBundle) => RoutineBundle): void => {
-    setRoutineBundle((current) => updater(current))
-  }
-
-  const updateActiveRoutineField = (field: 'name' | 'description', value: string): void => {
-    if (!activeRoutine) {
-      return
-    }
-
-    updateRoutineBundle((current) => ({
-      ...current,
-      routines: current.routines.map((routine) =>
-        routine.id === activeRoutine.id
-          ? {
-              ...routine,
-              [field]: field === 'name' ? toTitle(value) : value,
-              updatedAt: new Date().toISOString(),
-            }
-          : routine,
-      ),
-    }))
-  }
-
-  const createRoutine = (): void => {
-    const name = newRoutineName.trim()
-    if (!name) {
-      return
-    }
-
-    const timestamp = new Date().toISOString()
-    const routineId = createId('routine')
-    const dayId = createId('day')
-
-    const routine: Routine = {
-      id: routineId,
-      name: toTitle(name),
-      description: newRoutineDescription.trim(),
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      isArchived: false,
-    }
-
-    const firstDay: RoutineDay = {
-      id: dayId,
-      routineId,
-      name: 'Dia 1',
-      focus: 'Nuevo foco',
-      order: 1,
-    }
-
-    updateRoutineBundle((current) => ({
-      routines: [...current.routines, routine],
-      days: [...current.days, firstDay],
-      exercises: current.exercises,
-    }))
-
-    setNewRoutineName('')
-    setNewRoutineDescription('')
-    setUiMessage('Rutina creada. Si quieres usarla en este dispositivo, seleccionala y confirma el cambio.')
-  }
-
-  const archiveRoutine = (routineId: string, archive: boolean): void => {
-    const routine = routineById.get(routineId)
-    if (!routine) {
-      return
-    }
-
-    if (routine.id === activeRoutineId && archive) {
-      setUiMessage('No puedes archivar la rutina activa. Cambia de rutina primero.')
-      return
-    }
-
-    updateRoutineBundle((current) => ({
-      ...current,
-      routines: current.routines.map((item) =>
-        item.id === routineId
-          ? {
-              ...item,
-              isArchived: archive,
-              updatedAt: new Date().toISOString(),
-            }
-          : item,
-      ),
-    }))
-  }
-
-  const addDay = (): void => {
-    if (!activeRoutine) {
-      return
-    }
-
-    const name = newDayName.trim()
-    if (!name) {
-      return
-    }
-
-    const nextDay: RoutineDay = {
-      id: createId('day'),
-      routineId: activeRoutine.id,
-      name: toTitle(name),
-      focus: newDayFocus.trim() || 'Sin foco definido',
-      order: routineDays.length + 1,
-    }
-
-    updateRoutineBundle((current) => ({
-      ...current,
-      days: [...current.days, nextDay],
-    }))
-
-    setRoutineEditorDayId(nextDay.id)
-    setTrackDayId(nextDay.id)
-    setNewDayName('')
-    setNewDayFocus('')
-  }
-
-  const updateDayField = (dayId: string, field: 'name' | 'focus', value: string): void => {
-    updateRoutineBundle((current) => ({
-      ...current,
-      days: current.days.map((day) =>
-        day.id === dayId
-          ? {
-              ...day,
-              [field]: field === 'name' ? toTitle(value) : value,
-            }
-          : day,
-      ),
-    }))
-  }
-
-  const deleteDay = (dayId: string): void => {
-    if (!window.confirm('Eliminar dia y ejercicios asociados?')) {
-      return
-    }
-
-    const removedExerciseIds = new Set(
-      routineBundle.exercises.filter((exercise) => exercise.dayId === dayId).map((exercise) => exercise.id),
-    )
-
-    updateRoutineBundle((current) => ({
-      routines: current.routines,
-      days: current.days
-        .filter((day) => day.id !== dayId)
-        .map((day) => {
-          if (day.routineId !== activeRoutineId) {
-            return day
-          }
-          const sorted = sortDays(current.days.filter((item) => item.routineId === activeRoutineId && item.id !== dayId))
-          const nextOrder = sorted.findIndex((item) => item.id === day.id) + 1
-          return nextOrder > 0 ? { ...day, order: nextOrder } : day
-        }),
-      exercises: current.exercises.filter((exercise) => !removedExerciseIds.has(exercise.id)),
-    }))
-
-    setLogs((current) => current.filter((log) => log.dayId !== dayId && !removedExerciseIds.has(log.exerciseId)))
-  }
-
-  const addExercise = (): void => {
-    if (!activeRoutine || !routineEditorDayId) {
-      return
-    }
-
-    const name = newExerciseName.trim()
-    if (!name) {
-      return
-    }
-
-    const dayExercises = exercisesByDay.get(routineEditorDayId) ?? []
-
-    const exercise: RoutineExercise = {
-      id: createId('ex'),
-      routineId: activeRoutine.id,
-      dayId: routineEditorDayId,
-      slug: toSlug(name),
-      name: toTitle(name),
-      muscleGroup: newExerciseGroup.trim() || 'General',
-      targetSets: 4,
-      targetReps: '8-12',
-      targetWeight: 0,
-      restSeconds: 60,
-      notes: '',
-      order: dayExercises.length + 1,
-    }
-
-    updateRoutineBundle((current) => ({
-      ...current,
-      exercises: [...current.exercises, exercise],
-    }))
-
-    setNewExerciseName('')
-    setNewExerciseGroup('')
-  }
-
-  const updateExercise = (exerciseId: string, patch: Partial<RoutineExercise>): void => {
-    updateRoutineBundle((current) => ({
-      ...current,
-      exercises: current.exercises.map((exercise) =>
-        exercise.id === exerciseId
-          ? {
-              ...exercise,
-              ...patch,
-              slug: patch.name ? toSlug(patch.name) : exercise.slug,
-            }
-          : exercise,
-      ),
-    }))
   }
 
   const applySuggestedTargetWeight = (exercise: RoutineExercise): void => {
@@ -567,52 +442,21 @@ function App() {
       return
     }
 
-    updateExercise(exercise.id, { targetWeight: meta.suggestedWeight })
-    setUiMessage(`Objetivo de ${exercise.name} actualizado a ${meta.suggestedWeight} ${settings.units} (e1RM).`)
-  }
-
-  const deleteExercise = (exerciseId: string): void => {
-    if (!window.confirm('Eliminar ejercicio?')) {
-      return
-    }
-
-    updateRoutineBundle((current) => ({
+    setRoutineBundle((current) => ({
       ...current,
-      exercises: current.exercises.filter((exercise) => exercise.id !== exerciseId),
-    }))
-
-    setLogs((current) => current.filter((log) => log.exerciseId !== exerciseId))
-  }
-
-  const moveExercise = (exerciseId: string, direction: 'up' | 'down'): void => {
-    const currentDayExercises = [...(exercisesByDay.get(routineEditorDayId) ?? [])]
-    const index = currentDayExercises.findIndex((exercise) => exercise.id === exerciseId)
-    if (index < 0) {
-      return
-    }
-
-    const targetIndex = direction === 'up' ? index - 1 : index + 1
-    if (targetIndex < 0 || targetIndex >= currentDayExercises.length) {
-      return
-    }
-
-    const reordered = [...currentDayExercises]
-    const [item] = reordered.splice(index, 1)
-    reordered.splice(targetIndex, 0, item)
-
-    const orderMap = new Map(reordered.map((exercise, order) => [exercise.id, order + 1]))
-
-    updateRoutineBundle((current) => ({
-      ...current,
-      exercises: current.exercises.map((exercise) =>
-        orderMap.has(exercise.id)
-          ? {
-              ...exercise,
-              order: orderMap.get(exercise.id) ?? exercise.order,
-            }
-          : exercise,
+      exercises: current.exercises.map((candidate) =>
+        candidate.id === exercise.id
+          ? { ...candidate, targetWeight: meta.suggestedWeight ?? candidate.targetWeight }
+          : candidate,
       ),
     }))
+
+    setWorkoutDraft((prev) => ({
+      ...prev,
+      [exercise.id]: createDraftForExercise(exercise, lastPerformanceByExercise.get(exercise.id), meta.suggestedWeight),
+    }))
+
+    setUiMessage(`Objetivo de ${exercise.name} actualizado a ${meta.suggestedWeight} ${settings.units} (e1RM).`)
   }
 
   const updateWorkoutSet = (
@@ -678,11 +522,13 @@ function App() {
         return prev
       }
 
+      const defaultWeight = draft.sets.at(-1)?.weight ?? 0
+
       return {
         ...prev,
         [exerciseId]: {
           ...draft,
-          sets: [...draft.sets, emptyWorkoutSet()],
+          sets: [...draft.sets, { ...emptyWorkoutSet(), weight: defaultWeight }],
         },
       }
     })
@@ -760,7 +606,7 @@ function App() {
     })
 
     if (suggestedWeightByExerciseId.size > 0) {
-      updateRoutineBundle((current) => ({
+      setRoutineBundle((current) => ({
         ...current,
         exercises: current.exercises.map((exercise) =>
           suggestedWeightByExerciseId.has(exercise.id)
@@ -776,10 +622,35 @@ function App() {
     setWorkoutDraft((prev) => {
       const next = { ...prev }
       trackExercises.forEach((exercise) => {
-        next[exercise.id] = {
-          sets: Array.from({ length: Math.max(exercise.targetSets, 1) }, emptyWorkoutSet),
-          notes: '',
-        }
+        next[exercise.id] = createDraftForExercise(
+          exercise,
+          {
+            log: entries.find((entry) => entry.exerciseId === exercise.id) ?? lastPerformanceByExercise.get(exercise.id)?.log ?? {
+              id: '',
+              createdAt: now,
+              routineId: activeRoutine.id,
+              routineName: activeRoutine.name,
+              dayId: trackDay.id,
+              dayName: trackDay.name,
+              exerciseId: exercise.id,
+              exerciseName: exercise.name,
+              sets: [],
+              notes: '',
+            },
+            lastWeight:
+              entries
+                .find((entry) => entry.exerciseId === exercise.id)
+                ?.sets.slice()
+                .reverse()
+                .find((set) => set.weight > 0)?.weight ?? null,
+            completedSets: entries.find((entry) => entry.exerciseId === exercise.id)?.sets.length ?? 0,
+            repsSummary:
+              entries
+                .find((entry) => entry.exerciseId === exercise.id)
+                ?.sets.map((set) => set.reps).join(' / ') ?? 'Sin reps registradas',
+          },
+          suggestedWeightByExerciseId.get(exercise.id) ?? e1rmByExercise.get(exercise.id)?.suggestedWeight ?? null,
+        )
       })
       return next
     })
@@ -788,187 +659,10 @@ function App() {
     const suffix =
       autoUpdated > 0
         ? ` Objetivos actualizados automaticamente por e1RM en ${autoUpdated} ejercicios.`
-        : ' No hubo actualizacion automatica de objetivos (faltan datos o reps objetivo fuera de 1-10).'
-    setUiMessage(`Sesion guardada: ${entries.length} ejercicios registrados en ${activeRoutine.name}.${suffix}`)
+        : ' No hubo actualizacion automatica de objetivos.'
+    setUiMessage(`Sesion guardada: ${entries.length} ejercicios registrados en ${trackDay.name}.${suffix}`)
+    setActiveTab('home')
   }
-
-  const updateMediaRole = (mediaId: string, role: MediaRole): void => {
-    setMedia((current) => current.map((item) => (item.id === mediaId ? { ...item, role } : item)))
-  }
-
-  const removeExternalMedia = (mediaId: string): void => {
-    setMedia((current) => current.filter((item) => !(item.id === mediaId && item.origin === 'external')))
-  }
-
-  const localFilteredMedia = useMemo(() => {
-    const query = mediaSearchTerm.trim().toLowerCase()
-
-    return media.filter((item) => {
-      if (mediaTypeFilter !== 'all' && item.type !== mediaTypeFilter) {
-        return false
-      }
-      if (mediaOriginFilter !== 'all' && item.origin !== mediaOriginFilter) {
-        return false
-      }
-
-      if (!query) {
-        return true
-      }
-
-      const haystack = [
-        item.title,
-        item.slug,
-        item.provider,
-        item.license ?? '',
-        item.attribution ?? '',
-        item.path ?? '',
-        item.externalUrl ?? '',
-        item.tags.join(' '),
-      ]
-        .join(' ')
-        .toLowerCase()
-
-      return haystack.includes(query)
-    })
-  }, [media, mediaSearchTerm, mediaTypeFilter, mediaOriginFilter])
-
-  const searchInternet = async (): Promise<void> => {
-    const query = internetQuery.trim()
-    if (!query) {
-      return
-    }
-
-    setInternetLoading(true)
-    setInternetError('')
-    setInternetNotice('')
-
-    try {
-      const results = await searchInternetMedia(query)
-      setInternetResults(results)
-      if (results.length === 0) {
-        setInternetError('No se encontraron resultados externos para esa busqueda.')
-        return
-      }
-
-      const hasBroadResults = results.some((result) => result.relevanceTier === 'broad')
-      const hasFallbackResults = results.some((result) => result.relevanceTier === 'fallback')
-
-      if (hasBroadResults) {
-        setInternetNotice('No hubo coincidencias de entrenamiento suficientes; se muestran resultados amplios.')
-      } else if (hasFallbackResults) {
-        setInternetNotice('Mostrando resultados de fallback por falta de coincidencias estrictas.')
-      }
-    } catch {
-      setInternetError('No fue posible consultar fuentes externas en este momento.')
-    } finally {
-      setInternetLoading(false)
-    }
-  }
-
-  const clearInternetSearch = (): void => {
-    setInternetQuery('')
-    setInternetResults([])
-    setInternetError('')
-    setInternetNotice('')
-  }
-
-  const addExternalMediaToLibrary = (result: InternetMediaResult): void => {
-    setMedia((current) => {
-      const exists = current.some((item) => item.externalUrl === result.url)
-      if (exists) {
-        return current
-      }
-
-      const item: MediaItem = {
-        id: createId('external-media'),
-        title: result.title,
-        slug: toSlug(result.title),
-        type: result.type,
-        role: 'reference',
-        origin: 'external',
-        provider: result.provider,
-        path: null,
-        externalUrl: result.url,
-        thumbnailUrl: result.thumbnailUrl,
-        license: result.license,
-        attribution: result.attribution,
-        tags: result.tags,
-        isDuplicate: false,
-        checksum: null,
-        createdAt: new Date().toISOString(),
-      }
-
-      return [item, ...current]
-    })
-
-    setUiMessage('Recurso externo agregado a tu biblioteca de media.')
-  }
-
-  const logsForActiveRoutine = useMemo(
-    () => logs.filter((log) => log.routineId === activeRoutineId),
-    [logs, activeRoutineId],
-  )
-
-  const e1rmByExercise = useMemo(() => {
-    return buildE1rmMetaByExercise(logsForActiveRoutine, allExercisesForActiveRoutine, settings.units)
-  }, [logsForActiveRoutine, allExercisesForActiveRoutine, settings.units])
-
-  const e1rmReadyExerciseCount = useMemo(
-    () =>
-      allExercisesForActiveRoutine.filter((exercise) => {
-        const meta = e1rmByExercise.get(exercise.id)
-        return Boolean(meta && meta.sampleCount >= MIN_E1RM_SAMPLES)
-      }).length,
-    [allExercisesForActiveRoutine, e1rmByExercise],
-  )
-
-  const recentSessions = useMemo(() => {
-    const sessionMap = new Map<
-      string,
-      {
-        id: string
-        createdAt: string
-        dayName: string
-        totalSets: number
-        exercisesByName: Map<string, number>
-      }
-    >()
-
-    logsForActiveRoutine.forEach((log) => {
-      const sessionId = `${log.createdAt}::${log.routineId}::${log.dayId}`
-      const setCount = log.sets.length
-      const existing = sessionMap.get(sessionId)
-      if (!existing) {
-        sessionMap.set(sessionId, {
-          id: sessionId,
-          createdAt: log.createdAt,
-          dayName: log.dayName,
-          totalSets: setCount,
-          exercisesByName: new Map([[log.exerciseName, setCount]]),
-        })
-        return
-      }
-
-      existing.totalSets += setCount
-      existing.exercisesByName.set(log.exerciseName, (existing.exercisesByName.get(log.exerciseName) ?? 0) + setCount)
-    })
-
-    return Array.from(sessionMap.values())
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 8)
-      .map(
-        (session): SessionSummary => ({
-          id: session.id,
-          createdAt: session.createdAt,
-          dayName: session.dayName,
-          totalSets: session.totalSets,
-          exerciseCount: session.exercisesByName.size,
-          exercises: Array.from(session.exercisesByName.entries())
-            .map(([exerciseName, setCount]) => ({ exerciseName, setCount }))
-            .sort((a, b) => b.setCount - a.setCount || a.exerciseName.localeCompare(b.exerciseName)),
-        }),
-      )
-  }, [logsForActiveRoutine])
 
   const dayStats = useMemo(
     () =>
@@ -976,19 +670,10 @@ function App() {
         ...day,
         exerciseCount: (exercisesByDay.get(day.id) ?? []).length,
         logCount: logsForActiveRoutine.filter((log) => log.dayId === day.id).length,
+        isSuggested: suggestedDay?.id === day.id,
+        isLast: lastSession?.dayId === day.id,
       })),
-    [routineDays, exercisesByDay, logsForActiveRoutine],
-  )
-
-  const mediaCounts = useMemo(
-    () => ({
-      total: media.length,
-      local: media.filter((item) => item.origin === 'local').length,
-      external: media.filter((item) => item.origin === 'external').length,
-      images: media.filter((item) => item.type === 'image').length,
-      videos: media.filter((item) => item.type === 'video').length,
-    }),
-    [media],
+    [routineDays, exercisesByDay, logsForActiveRoutine, suggestedDay, lastSession],
   )
 
   const exportBackup = (): void => {
@@ -1036,6 +721,8 @@ function App() {
       setMedia(nextMedia)
       setLogs(nextLogs)
       setSettings(nextSettings)
+      setWorkoutDraft({})
+      setTrackDayId('')
       setUiMessage('Backup importado correctamente.')
     } catch {
       setUiMessage('No se pudo importar el archivo.')
@@ -1054,6 +741,7 @@ function App() {
     setLogs([])
     setSettings(seedSettings)
     setWorkoutDraft({})
+    setTrackDayId('')
     setUiMessage('Datos restaurados a la configuracion inicial.')
   }
 
@@ -1064,8 +752,9 @@ function App() {
           <h1>Training App</h1>
           <p className="topbar-tagline">
             <img src={resolveStaticPath('icons/pixel/home.svg')} alt="" aria-hidden="true" />
-            Entrena con foco cada dia.
+            Abres, ves que toca, y entrenas.
           </p>
+          <p className="topbar-routine">{activeRoutine?.name ?? 'Sin rutina activa'}</p>
         </div>
         <span className="badge">{settings.units.toUpperCase()}</span>
       </header>
@@ -1086,86 +775,23 @@ function App() {
 
       <main className="content">
         {uiMessage && (
-          <section className="panel full">
+          <section className="panel full message-panel">
             <p className="hint">{uiMessage}</p>
           </section>
         )}
 
-        {activeTab === 'dashboard' && (
+        {activeTab === 'home' && (
           <section className="panel-grid">
-            <article className="panel stat">
-              <h2>Rutina activa</h2>
-              <p>{activeRoutine?.name ?? 'Sin rutina'}</p>
-              <p>Rutinas disponibles: {nonArchivedRoutines.length}</p>
-              <p>Dias de la rutina activa: {routineDays.length}</p>
-              <p>Ejercicios de la rutina activa: {allExercisesForActiveRoutine.length}</p>
-            </article>
-
-            <article className="panel stat">
-              <h2>Tracking</h2>
-              <p>{logsForActiveRoutine.length} registros en rutina activa</p>
-              <p>e1RM disponible en {e1rmReadyExerciseCount}/{allExercisesForActiveRoutine.length} ejercicios</p>
-              <p>Lock rutina por dispositivo: {settings.routineLockEnabled ? 'Activo' : 'Inactivo'}</p>
-            </article>
-
-            <article className="panel stat">
-              <h2>Media</h2>
-              <p>{mediaCounts.total} recursos</p>
-              <p>{mediaCounts.local} locales</p>
-              <p>{mediaCounts.external} externos (URL)</p>
-              <p>{mediaCounts.videos} videos</p>
-            </article>
-
-            <article className="panel full">
-              <h2 className="heading-with-icon">
-                <img src={resolveStaticPath('icons/pixel/calendar.svg')} alt="" aria-hidden="true" />
-                Dias de la rutina activa
-              </h2>
-              <div className="day-overview">
-                {dayStats.map((day) => (
-                  <button
-                    key={day.id}
-                    type="button"
-                    className="day-chip"
-                    onClick={() => {
-                      setTrackDayId(day.id)
-                      setActiveTab('workout')
-                    }}
-                  >
-                    <strong>{day.name}</strong>
-                    <span>{day.focus}</span>
-                    <span>{day.exerciseCount} ejercicios</span>
-                    <span>{day.logCount} logs</span>
-                  </button>
-                ))}
-              </div>
-            </article>
-
-            <article className="panel full">
-              <h2>Sesiones recientes (rutina activa)</h2>
-              <div className="logs-list">
-                {recentSessions.length === 0 && <p>No hay sesiones registradas para esta rutina.</p>}
-                {recentSessions.map((session) => (
-                  <div key={session.id} className="log-row">
-                    <strong>{new Date(session.createdAt).toLocaleString()}</strong>
-                    <span>{session.dayName}</span>
-                    <span>{session.exerciseCount} ejercicios | {session.totalSets} sets</span>
-                    <span>
-                      {session.exercises.map((exercise) => `${exercise.exerciseName}: ${exercise.setCount} sets`).join(' | ')}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </article>
-          </section>
-        )}
-
-        {activeTab === 'routines' && (
-          <section className="panel-grid">
-            <article className="panel full">
-              <h2>Seleccion de rutina (dispositivo)</h2>
+            <article className="panel hero-panel">
+              <p className="eyebrow">Rutina actual</p>
+              <h2>{activeRoutine?.name ?? 'Sin rutina activa'}</h2>
+              <p className="hero-copy">
+                {lastSession
+                  ? `La ultima sesion fue ${lastSession.dayName}. La app te deja listo el siguiente paso para no perder tiempo.`
+                  : 'Aun no hay historial en esta rutina. La app te va a sugerir empezar por el primer dia.'}
+              </p>
               <label>
-                Rutina activa
+                Cambiar rutina
                 <select
                   value={activeRoutineId}
                   onChange={(event) => requestRoutineChange(event.target.value, 'manual')}
@@ -1178,405 +804,332 @@ function App() {
                 </select>
               </label>
               <p className="hint">
-                Este dispositivo recuerda la rutina seleccionada y pedira confirmacion antes de cambiarla.
+                Se mantiene el cambio de rutina desde la app. La edicion simple de rutinas queda como mejora futura.
               </p>
             </article>
 
-            <article className="panel full">
-              <h2>Crear rutina desde cero (UI)</h2>
-              <div className="inline-form">
-                <input
-                  value={newRoutineName}
-                  placeholder="Nombre de rutina"
-                  onChange={(event) => setNewRoutineName(event.target.value)}
-                />
-                <input
-                  value={newRoutineDescription}
-                  placeholder="Descripcion"
-                  onChange={(event) => setNewRoutineDescription(event.target.value)}
-                />
-                <button type="button" onClick={createRoutine}>
-                  Crear rutina
-                </button>
-              </div>
-              <p className="hint">La rutina nueva incluye un Dia 1 base para empezar a cargar ejercicios.</p>
-            </article>
-
-            <article className="panel full">
-              <h2>Rutinas disponibles</h2>
-              <div className="day-list">
-                {routineBundle.routines.map((routine) => (
-                  <div key={routine.id} className={routine.id === activeRoutineId ? 'day-card selected' : 'day-card'}>
-                    <label>
-                      Nombre
-                      <input
-                        value={routine.name}
-                        disabled={routine.id !== activeRoutineId}
-                        onChange={(event) => updateActiveRoutineField('name', event.target.value)}
-                      />
-                    </label>
-                    <label>
-                      Descripcion
-                      <input
-                        value={routine.description}
-                        disabled={routine.id !== activeRoutineId}
-                        onChange={(event) => updateActiveRoutineField('description', event.target.value)}
-                      />
-                    </label>
-                    <div className="row-actions">
-                      <button type="button" onClick={() => requestRoutineChange(routine.id, 'manual')}>
-                        Usar en este dispositivo
-                      </button>
-                      <button
-                        type="button"
-                        className="danger"
-                        onClick={() => archiveRoutine(routine.id, !routine.isArchived)}
-                        disabled={routine.id === activeRoutineId && !routine.isArchived}
-                      >
-                        {routine.isArchived ? 'Desarchivar' : 'Archivar'}
-                      </button>
-                    </div>
-                    <p className="hint">Estado: {routine.isArchived ? 'Archivada' : 'Activa'}</p>
+            <article className="panel summary-card">
+              <p className="eyebrow">Ultima vez</p>
+              {lastSession ? (
+                <>
+                  <h2>{lastSession.dayName}</h2>
+                  <p>{formatSessionTimestamp(lastSession.createdAt)}</p>
+                  <p>
+                    {lastSession.exerciseCount} ejercicios | {lastSession.totalSets} sets
+                  </p>
+                  <div className="session-pill-list">
+                    {lastSession.exercises.map((exercise) => (
+                      <span key={`${lastSession.id}-${exercise.exerciseName}`} className="session-pill">
+                        {exercise.exerciseName}
+                      </span>
+                    ))}
                   </div>
-                ))}
+                </>
+              ) : (
+                <>
+                  <h2>Sin historial</h2>
+                  <p>Registra tu primera sesion para que la app empiece a sugerir el siguiente dia.</p>
+                </>
+              )}
+            </article>
+
+            <article className="panel summary-card accent-card">
+              <p className="eyebrow">Toca hoy</p>
+              <h2>{suggestedDay?.name ?? 'Sin dias'}</h2>
+              <p>{suggestedDay?.focus ?? 'Agrega o selecciona una rutina con dias disponibles.'}</p>
+              <p>{(exercisesByDay.get(suggestedDay?.id ?? '') ?? []).length} ejercicios listos</p>
+              <div className="row-actions">
+                <button
+                  type="button"
+                  className="primary"
+                  disabled={!suggestedDay}
+                  onClick={() => {
+                    if (!suggestedDay) {
+                      return
+                    }
+                    setTrackDayId(suggestedDay.id)
+                    setActiveTab('train')
+                  }}
+                >
+                  Abrir dia sugerido
+                </button>
               </div>
             </article>
 
             <article className="panel full">
-              <h2>Dias de {activeRoutine?.name ?? 'rutina'}</h2>
-              <div className="inline-form">
-                <input value={newDayName} placeholder="Nuevo dia" onChange={(event) => setNewDayName(event.target.value)} />
-                <input value={newDayFocus} placeholder="Foco" onChange={(event) => setNewDayFocus(event.target.value)} />
-                <button type="button" onClick={addDay} disabled={!activeRoutine}>
-                  Agregar dia
-                </button>
-              </div>
-
-              <div className="day-list">
-                {routineDays.map((day) => (
-                  <div key={day.id} className={day.id === routineEditorDayId ? 'day-card selected' : 'day-card'}>
-                    <label>
-                      Nombre
-                      <input value={day.name} onChange={(event) => updateDayField(day.id, 'name', event.target.value)} />
-                    </label>
-                    <label>
-                      Foco
-                      <input value={day.focus} onChange={(event) => updateDayField(day.id, 'focus', event.target.value)} />
-                    </label>
-                    <div className="row-actions">
-                      <button type="button" onClick={() => setRoutineEditorDayId(day.id)}>
-                        Editar ejercicios
-                      </button>
-                      <button type="button" onClick={() => setTrackDayId(day.id)}>
-                        Usar en tracking
-                      </button>
-                      <button type="button" className="danger" onClick={() => deleteDay(day.id)}>
-                        Eliminar
-                      </button>
+              <h2 className="heading-with-icon">
+                <img src={resolveStaticPath('icons/pixel/calendar.svg')} alt="" aria-hidden="true" />
+                Dias disponibles
+              </h2>
+              <div className="day-overview">
+                {dayStats.map((day) => (
+                  <button
+                    key={day.id}
+                    type="button"
+                    className={[
+                      'day-chip',
+                      day.isSuggested ? 'is-suggested' : '',
+                      day.isLast ? 'is-last' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    onClick={() => {
+                      setTrackDayId(day.id)
+                      setActiveTab('train')
+                    }}
+                  >
+                    <div className="day-chip-topline">
+                      <strong>{day.name}</strong>
+                      {day.isSuggested && <span className="status-badge suggested">Sigue</span>}
+                      {day.isLast && <span className="status-badge last">Ultimo</span>}
                     </div>
-                  </div>
+                    <span>{day.focus}</span>
+                    <span>{day.exerciseCount} ejercicios</span>
+                    <span>{day.logCount} registros</span>
+                  </button>
                 ))}
-              </div>
-            </article>
-
-            <article className="panel full">
-              <h2>Ejercicios de {routineEditorDay?.name ?? 'dia'}</h2>
-              <div className="inline-form">
-                <input
-                  value={newExerciseName}
-                  placeholder="Nuevo ejercicio"
-                  onChange={(event) => setNewExerciseName(event.target.value)}
-                />
-                <input
-                  value={newExerciseGroup}
-                  placeholder="Grupo muscular"
-                  onChange={(event) => setNewExerciseGroup(event.target.value)}
-                />
-                <button type="button" onClick={addExercise} disabled={!routineEditorDayId}>
-                  Agregar ejercicio
-                </button>
-              </div>
-
-              <div className="exercise-list">
-                {editorExercises.map((exercise, index) => {
-                  const e1rmMeta = e1rmByExercise.get(exercise.id)
-                  const hasStableE1rm = Boolean(e1rmMeta && e1rmMeta.sampleCount >= MIN_E1RM_SAMPLES)
-
-                  return (
-                    <article key={exercise.id} className="exercise-card">
-                      <div className="exercise-head">
-                        <h3>
-                          {index + 1}. {exercise.name}
-                        </h3>
-                        <div className="row-actions">
-                          <button type="button" onClick={() => moveExercise(exercise.id, 'up')}>
-                            Subir
-                          </button>
-                          <button type="button" onClick={() => moveExercise(exercise.id, 'down')}>
-                            Bajar
-                          </button>
-                          <button type="button" className="danger" onClick={() => deleteExercise(exercise.id)}>
-                            Eliminar
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="grid-two">
-                        <label>
-                          Nombre
-                          <input
-                            value={exercise.name}
-                            onChange={(event) => updateExercise(exercise.id, { name: event.target.value })}
-                          />
-                        </label>
-                        <label>
-                          Grupo
-                          <input
-                            value={exercise.muscleGroup}
-                            onChange={(event) => updateExercise(exercise.id, { muscleGroup: event.target.value })}
-                          />
-                        </label>
-                        <label>
-                          Sets objetivo
-                          <input
-                            type="number"
-                            min={1}
-                            value={exercise.targetSets}
-                            onChange={(event) =>
-                              updateExercise(exercise.id, { targetSets: Math.max(1, Number(event.target.value) || 1) })
-                            }
-                          />
-                        </label>
-                        <label>
-                          Reps objetivo
-                          <input
-                            value={exercise.targetReps}
-                            onChange={(event) => updateExercise(exercise.id, { targetReps: event.target.value })}
-                          />
-                        </label>
-                        <label>
-                          Peso objetivo ({settings.units})
-                          <input
-                            type="number"
-                            min={0}
-                            value={exercise.targetWeight}
-                            onChange={(event) =>
-                              updateExercise(exercise.id, { targetWeight: Math.max(0, Number(event.target.value) || 0) })
-                            }
-                          />
-                        </label>
-                      </div>
-
-                      {hasStableE1rm ? (
-                        <div className="hint">
-                          e1RM estimado: {e1rmMeta?.e1rm.toFixed(1)} {settings.units} ({e1rmMeta?.sampleCount} sets validos).
-                          {e1rmMeta?.suggestedWeight && e1rmMeta.anchorReps
-                            ? ` Sugerencia: ${e1rmMeta.suggestedWeight} ${settings.units} para ${e1rmMeta.anchorReps} reps.`
-                            : ' Sin sugerencia de carga: usa objetivo de reps dentro de 1-10 para este metodo.'}
-                        </div>
-                      ) : (
-                        <p className="hint">
-                          e1RM: faltan datos (minimo {MIN_E1RM_SAMPLES} sets validos entre 1 y 10 reps).
-                        </p>
-                      )}
-
-                      {hasStableE1rm && e1rmMeta?.suggestedWeight ? (
-                        <div className="row-actions">
-                          <button type="button" onClick={() => applySuggestedTargetWeight(exercise)}>
-                            Usar peso sugerido e1RM
-                          </button>
-                        </div>
-                      ) : null}
-
-                      <label>
-                        Notas
-                        <textarea
-                          value={exercise.notes}
-                          onChange={(event) => updateExercise(exercise.id, { notes: event.target.value })}
-                        />
-                      </label>
-                    </article>
-                  )
-                })}
               </div>
             </article>
           </section>
         )}
 
-        {activeTab === 'workout' && (
+        {activeTab === 'train' && (
           <section className="panel-grid">
-            <article className="panel full">
-              <h2>Tracking por dia</h2>
-              <label>
-                Rutina activa
-                <select
-                  value={activeRoutineId}
-                  onChange={(event) => requestRoutineChange(event.target.value, 'manual')}
-                >
-                  {nonArchivedRoutines.map((routine) => (
-                    <option key={routine.id} value={routine.id}>
-                      {routine.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+            <article className="panel full workout-header-card">
+              <div className="workout-header-main">
+                <div>
+                  <p className="eyebrow">Entreno actual</p>
+                  <h2>{trackDay?.name ?? 'Selecciona un dia'}</h2>
+                  <p>{trackDay?.focus ?? 'Elige un dia desde Inicio o desde este selector.'}</p>
+                  {lastSession ? <p className="hint">Ultima sesion registrada: {lastSession.dayName}</p> : null}
+                </div>
+                {suggestedDay ? (
+                  <button
+                    type="button"
+                    onClick={() => setTrackDayId(suggestedDay.id)}
+                  >
+                    Ir al dia sugerido
+                  </button>
+                ) : null}
+              </div>
 
-              <label>
-                Dia
-                <select value={trackDayId} onChange={(event) => setTrackDayId(event.target.value)}>
-                  {routineDays.map((day) => (
-                    <option key={day.id} value={day.id}>
-                      {day.name} - {day.focus}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <p className="hint">Fecha: {new Date().toLocaleDateString()}</p>
+              <div className="day-overview compact">
+                {routineDays.map((day) => (
+                  <button
+                    key={day.id}
+                    type="button"
+                    className={day.id === trackDay?.id ? 'day-chip selected' : 'day-chip'}
+                    onClick={() => setTrackDayId(day.id)}
+                  >
+                    <strong>{day.name}</strong>
+                    <span>{day.focus}</span>
+                  </button>
+                ))}
+              </div>
             </article>
 
             {trackExercises.map((exercise) => {
               const draft = workoutDraft[exercise.id]
               const e1rmMeta = e1rmByExercise.get(exercise.id)
               const hasStableE1rm = Boolean(e1rmMeta && e1rmMeta.sampleCount >= MIN_E1RM_SAMPLES)
+              const lastPerformance = lastPerformanceByExercise.get(exercise.id)
+              const mediaItem = exerciseMediaById.get(exercise.id)
+              const mediaUrl =
+                mediaItem?.origin === 'local'
+                  ? resolveMediaPath(mediaItem.path)
+                  : (mediaItem?.externalUrl ?? mediaItem?.thumbnailUrl ?? null)
+              const imageState = imageSearchState[exercise.id] ?? 'idle'
 
               return (
                 <article key={exercise.id} className="panel full exercise-session">
-                  <div className="exercise-head">
-                    <h3>{exercise.name}</h3>
-                    <p>
-                      Objetivo: {exercise.targetSets}x{exercise.targetReps} - {exercise.targetWeight} {settings.units}
-                    </p>
-                  </div>
-
-                  {hasStableE1rm ? (
-                    <p className="hint">
-                      e1RM: {e1rmMeta?.e1rm.toFixed(1)} {settings.units} ({e1rmMeta?.sampleCount} sets validos).
-                      {e1rmMeta?.suggestedWeight && e1rmMeta.anchorReps
-                        ? ` Peso sugerido: ${e1rmMeta.suggestedWeight} ${settings.units} para ${e1rmMeta.anchorReps} reps.`
-                        : ' Sin sugerencia de carga por objetivo de reps fuera de 1-10.'}
-                    </p>
-                  ) : (
-                    <p className="hint">e1RM dinamico disponible cuando registres al menos 3 sets validos (1-10 reps).</p>
-                  )}
-
-                  {hasStableE1rm && e1rmMeta?.suggestedWeight ? (
-                    <div className="row-actions">
-                      <button type="button" onClick={() => applySuggestedTargetWeight(exercise)}>
-                        Aplicar peso sugerido
-                      </button>
+                  <div className="exercise-session-layout">
+                    <div className="exercise-visual">
+                      {mediaUrl ? (
+                        <img src={mediaUrl} alt={`Referencia de ${exercise.name}`} loading="lazy" />
+                      ) : (
+                        <div className="exercise-image-placeholder">
+                          <span>{imageState === 'loading' ? 'Buscando imagen...' : 'Sin imagen aun'}</span>
+                        </div>
+                      )}
+                      {mediaItem?.attribution ? (
+                        <p className="media-caption">Fuente: {mediaItem.attribution}</p>
+                      ) : mediaItem?.provider ? (
+                        <p className="media-caption">Fuente: {mediaItem.provider}</p>
+                      ) : null}
                     </div>
-                  ) : null}
 
-                  <div className="sets-table-wrap">
-                    <table className="sets-table">
-                      <thead>
-                        <tr>
-                          <th>Set</th>
-                          <th>Reps</th>
-                          <th>Peso</th>
-                          <th>OK</th>
-                          <th></th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    <div className="exercise-body">
+                      <div className="exercise-head">
+                        <div>
+                          <h3>{exercise.name}</h3>
+                          <p>{exercise.muscleGroup}</p>
+                        </div>
+                        <div className="exercise-objective">
+                          <strong>
+                            {exercise.targetSets} x {exercise.targetReps}
+                          </strong>
+                          <span>Objetivo base: {exercise.targetWeight} {settings.units}</span>
+                        </div>
+                      </div>
+
+                      <div className="stats-grid">
+                        <div className="stat-tile">
+                          <span className="stat-label">Ultimo peso</span>
+                          <strong>
+                            {lastPerformance?.lastWeight !== null && lastPerformance?.lastWeight !== undefined
+                              ? `${lastPerformance.lastWeight} ${settings.units}`
+                              : 'Sin dato'}
+                          </strong>
+                          <span className="stat-subtle">
+                            {lastPerformance
+                              ? `${lastPerformance.completedSets || lastPerformance.log.sets.length} sets | reps ${lastPerformance.repsSummary}`
+                              : 'Todavia no registras este ejercicio'}
+                          </span>
+                        </div>
+
+                        <div className="stat-tile">
+                          <span className="stat-label">Peso sugerido</span>
+                          <strong>
+                            {hasStableE1rm && e1rmMeta?.suggestedWeight !== null
+                              ? `${e1rmMeta?.suggestedWeight ?? 0} ${settings.units}`
+                              : 'Sin sugerencia'}
+                          </strong>
+                          <span className="stat-subtle">
+                            {hasStableE1rm && e1rmMeta?.anchorReps
+                              ? `Calculado para ${e1rmMeta?.anchorReps ?? 0} reps`
+                              : `Disponible con ${MIN_E1RM_SAMPLES} sets validos`}
+                          </span>
+                        </div>
+
+                        <div className="stat-tile">
+                          <span className="stat-label">Ultimo registro</span>
+                          <strong>
+                            {lastPerformance ? formatSessionTimestamp(lastPerformance.log.createdAt) : 'Sin historial'}
+                          </strong>
+                          <span className="stat-subtle">{trackDay?.name ?? ''}</span>
+                        </div>
+                      </div>
+
+                      {hasStableE1rm && e1rmMeta?.suggestedWeight ? (
+                        <div className="row-actions">
+                          <button type="button" onClick={() => applySuggestedTargetWeight(exercise)}>
+                            Usar peso sugerido
+                          </button>
+                        </div>
+                      ) : null}
+
+                      <div className="sets-table-wrap">
+                        <table className="sets-table">
+                          <thead>
+                            <tr>
+                              <th>Set</th>
+                              <th>Reps</th>
+                              <th>Peso</th>
+                              <th>OK</th>
+                              <th></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(draft?.sets ?? []).map((set, index) => (
+                              <tr key={set.id}>
+                                <td>{index + 1}</td>
+                                <td>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    value={set.reps}
+                                    onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'reps', event.target.value)}
+                                  />
+                                </td>
+                                <td>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    value={set.weight}
+                                    onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'weight', event.target.value)}
+                                  />
+                                </td>
+                                <td>
+                                  <input
+                                    type="checkbox"
+                                    checked={set.done}
+                                    onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'done', event.target.checked)}
+                                  />
+                                </td>
+                                <td>
+                                  <button type="button" onClick={() => removeWorkoutSet(exercise.id, set.id)}>
+                                    -
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="sets-mobile-list">
                         {(draft?.sets ?? []).map((set, index) => (
-                          <tr key={set.id}>
-                            <td>{index + 1}</td>
-                            <td>
-                              <input
-                                type="number"
-                                min={0}
-                                value={set.reps}
-                                onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'reps', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="number"
-                                min={0}
-                                value={set.weight}
-                                onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'weight', event.target.value)}
-                              />
-                            </td>
-                            <td>
+                          <article key={`mobile-${set.id}`} className="set-mobile-card">
+                            <div className="set-mobile-head">
+                              <strong>Set {index + 1}</strong>
+                              <button type="button" onClick={() => removeWorkoutSet(exercise.id, set.id)} aria-label={`Eliminar set ${index + 1}`}>
+                                -
+                              </button>
+                            </div>
+                            <div className="set-mobile-grid">
+                              <label>
+                                Reps
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={set.reps}
+                                  onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'reps', event.target.value)}
+                                />
+                              </label>
+                              <label>
+                                Peso
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={set.weight}
+                                  onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'weight', event.target.value)}
+                                />
+                              </label>
+                            </div>
+                            <label className="checkbox-row">
                               <input
                                 type="checkbox"
                                 checked={set.done}
                                 onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'done', event.target.checked)}
                               />
-                            </td>
-                            <td>
-                              <button type="button" onClick={() => removeWorkoutSet(exercise.id, set.id)}>
-                                -
-                              </button>
-                            </td>
-                          </tr>
+                              <span>Set completado</span>
+                            </label>
+                          </article>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      </div>
 
-                  <div className="sets-mobile-list">
-                    {(draft?.sets ?? []).map((set, index) => (
-                      <article key={`mobile-${set.id}`} className="set-mobile-card">
-                        <div className="set-mobile-head">
-                          <strong>Set {index + 1}</strong>
-                          <button type="button" onClick={() => removeWorkoutSet(exercise.id, set.id)} aria-label={`Eliminar set ${index + 1}`}>
-                            -
-                          </button>
-                        </div>
-                        <div className="set-mobile-grid">
-                          <label>
-                            Reps
-                            <input
-                              type="number"
-                              min={0}
-                              value={set.reps}
-                              onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'reps', event.target.value)}
-                            />
-                          </label>
-                          <label>
-                            Peso
-                            <input
-                              type="number"
-                              min={0}
-                              value={set.weight}
-                              onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'weight', event.target.value)}
-                            />
-                          </label>
-                        </div>
-                        <label className="checkbox-row">
-                          <input
-                            type="checkbox"
-                            checked={set.done}
-                            onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'done', event.target.checked)}
-                          />
-                          <span>Set completado</span>
-                        </label>
-                      </article>
-                    ))}
-                  </div>
+                      <div className="row-actions">
+                        <button type="button" onClick={() => addWorkoutSet(exercise.id)}>
+                          Agregar set
+                        </button>
+                      </div>
 
-                  <div className="row-actions">
-                    <button type="button" onClick={() => addWorkoutSet(exercise.id)}>
-                      Agregar set
-                    </button>
+                      <label>
+                        Notas de ejercicio
+                        <textarea
+                          value={draft?.notes ?? ''}
+                          onChange={(event) => updateWorkoutNotes(exercise.id, event.target.value)}
+                        />
+                      </label>
+                    </div>
                   </div>
-
-                  <label>
-                    Notas de ejercicio
-                    <textarea
-                      value={draft?.notes ?? ''}
-                      onChange={(event) => updateWorkoutNotes(exercise.id, event.target.value)}
-                    />
-                  </label>
                 </article>
               )
             })}
 
             <article className="panel full">
               <div className="row-actions">
-                <button type="button" className="primary" onClick={saveWorkoutSession}>
+                <button type="button" className="primary" onClick={saveWorkoutSession} disabled={!trackDay}>
                   Guardar sesion del dia
                 </button>
               </div>
@@ -1584,161 +1137,12 @@ function App() {
           </section>
         )}
 
-        {activeTab === 'media' && (
-          <section className="panel-grid">
-            <article className="panel full">
-              <h2>Busqueda local en biblioteca</h2>
-              <div className="inline-form">
-                <input
-                  value={mediaSearchTerm}
-                  placeholder="Buscar por nombre, tag, proveedor, url"
-                  onChange={(event) => setMediaSearchTerm(event.target.value)}
-                />
-                <select value={mediaTypeFilter} onChange={(event) => setMediaTypeFilter(event.target.value as MediaTypeFilter)}>
-                  <option value="all">Todos los tipos</option>
-                  <option value="image">Imagenes</option>
-                  <option value="video">Videos</option>
-                </select>
-                <select
-                  value={mediaOriginFilter}
-                  onChange={(event) => setMediaOriginFilter(event.target.value as MediaOriginFilter)}
-                >
-                  <option value="all">Todos los origenes</option>
-                  <option value="local">Locales</option>
-                  <option value="external">Externos</option>
-                </select>
-              </div>
-            </article>
-
-            <article className="panel full">
-              <h2>Busqueda en internet</h2>
-              <div className="inline-form">
-                <input
-                  value={internetQuery}
-                  placeholder="Buscar en Openverse y Wikimedia"
-                  onChange={(event) => setInternetQuery(event.target.value)}
-                />
-                <button type="button" onClick={searchInternet} disabled={internetLoading}>
-                  {internetLoading ? 'Buscando...' : 'Buscar'}
-                </button>
-                <button
-                  type="button"
-                  onClick={clearInternetSearch}
-                  disabled={internetLoading}
-                >
-                  Cerrar busqueda
-                </button>
-              </div>
-              {internetError && <p className="hint">{internetError}</p>}
-              {internetNotice && <p className="hint">{internetNotice}</p>}
-              <p className="hint">
-                Los resultados externos se guardan como URL en la biblioteca. Para dejarlos permanentes en el repo, usa pin manual desde codigo.
-              </p>
-              <p className="hint">
-                La busqueda externa prioriza entrenamiento y, si queda vacia, aplica fallback por coincidencia con la consulta.
-              </p>
-            </article>
-
-            {internetResults.length > 0 && (
-              <article className="panel full">
-                <div className="exercise-head">
-                  <h2>Resultados internet</h2>
-                  <div className="row-actions">
-                    <button type="button" onClick={clearInternetSearch}>
-                      Cerrar resultados
-                    </button>
-                  </div>
-                </div>
-                <div className="media-results-grid">
-                  {internetResults.map((result) => (
-                    <div key={`${result.provider}-${result.id}`} className="media-result-card">
-                      <strong>{result.title}</strong>
-                      <span className="hint">{result.provider} - {result.type}</span>
-
-                      {result.type === 'image' && result.thumbnailUrl && (
-                        <img src={result.thumbnailUrl} alt={result.title} loading="lazy" />
-                      )}
-
-                      {result.type === 'video' && (
-                        <video controls muted playsInline preload="metadata" src={result.url} />
-                      )}
-
-                      <div className="row-actions">
-                        <button type="button" onClick={() => addExternalMediaToLibrary(result)}>
-                          Guardar URL en biblioteca
-                        </button>
-                        <a href={result.url} target="_blank" rel="noreferrer" className="link-button">
-                          Abrir / Descargar
-                        </a>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </article>
-            )}
-
-            <article className="panel full">
-              <h2>Biblioteca media</h2>
-              <div className="media-library-grid">
-                {localFilteredMedia.map((item) => {
-                  const previewUrl = item.origin === 'local' ? resolveMediaPath(item.path) : (item.externalUrl ?? item.thumbnailUrl)
-                  const resourceUrl = item.origin === 'external' ? item.externalUrl : previewUrl
-
-                  return (
-                    <article key={item.id} className="panel media-card">
-                      <header>
-                        <h3>{item.title}</h3>
-                        <p>{item.type.toUpperCase()} | {item.origin.toUpperCase()}</p>
-                        <p>{item.provider}</p>
-                      </header>
-
-                      {item.type === 'video' ? (
-                        <video controls muted playsInline preload="metadata" src={previewUrl ?? undefined} />
-                      ) : (
-                        <img src={previewUrl ?? undefined} alt={item.title} loading="lazy" />
-                      )}
-
-                      <label>
-                        Rol
-                        <select
-                          value={item.role}
-                          onChange={(event) => updateMediaRole(item.id, event.target.value as MediaRole)}
-                        >
-                          <option value="single">single</option>
-                          <option value="multi">multi</option>
-                          <option value="reference">reference</option>
-                        </select>
-                      </label>
-
-                      <p className="hint">Tags: {item.tags.length > 0 ? item.tags.join(', ') : 'sin tags'}</p>
-                      {item.license && <p className="hint">Licencia: {item.license}</p>}
-
-                      <div className="row-actions">
-                        {resourceUrl && (
-                          <a href={resourceUrl} target="_blank" rel="noreferrer" className="link-button">
-                            Abrir recurso
-                          </a>
-                        )}
-                        {item.origin === 'external' && (
-                          <button type="button" className="danger" onClick={() => removeExternalMedia(item.id)}>
-                            Quitar externo
-                          </button>
-                        )}
-                      </div>
-                    </article>
-                  )
-                })}
-              </div>
-            </article>
-          </section>
-        )}
-
         {activeTab === 'settings' && (
           <section className="panel-grid">
-            <article className="panel full">
-              <h2>Preferencias</h2>
+            <article className="panel">
+              <h2>Pantalla</h2>
               <label>
-                Tamano de fuente
+                Escala tipografica
                 <select
                   value={settings.fontScale}
                   onChange={(event) =>
@@ -1755,9 +1159,10 @@ function App() {
                   ))}
                 </select>
               </label>
+            </article>
 
-              <p className="hint">Se guarda en este dispositivo para que cada telefono use el tamano de lectura que le sirva mejor.</p>
-
+            <article className="panel">
+              <h2>Unidades</h2>
               <label>
                 Unidad de peso
                 <select
@@ -1769,11 +1174,14 @@ function App() {
                     }))
                   }
                 >
-                  <option value="kg">kg</option>
-                  <option value="lb">lb</option>
+                  <option value="kg">Kilogramos</option>
+                  <option value="lb">Libras</option>
                 </select>
               </label>
+            </article>
 
+            <article className="panel full">
+              <h2>Rutina en este dispositivo</h2>
               <label className="checkbox-row">
                 <input
                   type="checkbox"
@@ -1785,10 +1193,8 @@ function App() {
                     }))
                   }
                 />
-                <span>Solicitar confirmacion al cambiar rutina activa en este dispositivo</span>
+                <span>Pedir confirmacion antes de cambiar la rutina activa</span>
               </label>
-
-              <p className="hint">Schema version: {settings.schemaVersion}</p>
             </article>
 
             <article className="panel full">
@@ -1801,10 +1207,18 @@ function App() {
                   Importar JSON
                   <input type="file" accept="application/json" onChange={importBackup} />
                 </label>
+              </div>
+              <p className="hint">El backup incluye rutinas, historial, settings y las referencias de imagen guardadas.</p>
+            </article>
+
+            <article className="panel full">
+              <h2>Reset</h2>
+              <div className="row-actions">
                 <button type="button" className="danger" onClick={resetAllData}>
-                  Reset total
+                  Restaurar datos iniciales
                 </button>
               </div>
+              <p className="hint">Schema version: {settings.schemaVersion}</p>
             </article>
           </section>
         )}
