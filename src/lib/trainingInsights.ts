@@ -185,8 +185,8 @@ const scoreMediaForExercise = (exercise: RoutineExercise, item: MediaItem): numb
   if (item.role === 'single') {
     score += 3
   }
-  if (item.origin === 'external') {
-    score += 2
+  if (item.origin === 'local') {
+    score += 4
   }
   if (item.type === 'image') {
     score += 1

@@ -1,4 +1,5 @@
 import { mediaCatalog } from './mediaCatalog'
+import { exerciseCardCatalog } from './exerciseCardCatalog'
 import type {
   AppSettings,
   FontScale,
@@ -1044,7 +1045,7 @@ const parseTags = (value: unknown): string[] => {
   return uniqueStrings(value.filter((item): item is string => typeof item === 'string').map((item) => item.trim()))
 }
 
-const catalogLocalMedia: MediaItem[] = mediaCatalog.map((record) => ({
+const catalogLocalMedia: MediaItem[] = mediaCatalog.concat(exerciseCardCatalog).map((record) => ({
   id: record.id,
   title: record.title,
   slug: record.slug,
