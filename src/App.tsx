@@ -188,6 +188,7 @@ function App() {
   const [workoutDraft, setWorkoutDraft] = useState<WorkoutDraft>({})
   const [uiMessage, setUiMessage] = useState('')
   const [imageSearchState, setImageSearchState] = useState<Record<string, 'idle' | 'loading' | 'done' | 'failed'>>({})
+  const [expandedImage, setExpandedImage] = useState<{ url: string; alt: string } | null>(null)
 
   useEffect(() => {
     saveJson(STORAGE_KEYS.routine, routineBundle)
@@ -403,6 +404,21 @@ function App() {
       cancelled = true
     }
   }, [trackExercises, exerciseMediaById, imageSearchState])
+
+  useEffect(() => {
+    if (!expandedImage) {
+      return
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setExpandedImage(null)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [expandedImage])
 
   const requestRoutineChange = (nextRoutineId: string, reason: 'manual' | 'system' = 'manual'): boolean => {
     if (!nextRoutineId || nextRoutineId === settings.selectedRoutineId) {
@@ -945,7 +961,17 @@ function App() {
                   <div className="exercise-session-layout">
                     <div className="exercise-visual">
                       {mediaUrl ? (
-                        <img src={mediaUrl} alt={`Referencia de ${exercise.name}`} loading="lazy" />
+                        <button
+                          type="button"
+                          className="exercise-image-button"
+                          onClick={() => setExpandedImage({
+                            url: mediaUrl,
+                            alt: `Referencia de ${exercise.name}` ,
+                          })}
+                          aria-label={`Abrir imagen completa de ${exercise.name}`}
+                        >
+                          <img src={mediaUrl} alt={`Referencia de ${exercise.name}`} loading="lazy" />
+                        </button>
                       ) : (
                         <div className="exercise-image-placeholder">
                           <span>{imageState === 'loading' ? 'Buscando imagen...' : 'Sin imagen aun'}</span>
@@ -1223,6 +1249,22 @@ function App() {
           </section>
         )}
       </main>
+
+      {expandedImage ? (
+        <div className="image-lightbox" role="dialog" aria-modal="true" onClick={() => setExpandedImage(null)}>
+          <button
+            type="button"
+            className="image-lightbox-close"
+            onClick={() => setExpandedImage(null)}
+            aria-label="Cerrar imagen"
+          >
+            ×
+          </button>
+          <div className="image-lightbox-content" onClick={(event) => event.stopPropagation()}>
+            <img src={expandedImage.url} alt={expandedImage.alt} />
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
