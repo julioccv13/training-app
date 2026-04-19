@@ -6,6 +6,13 @@
 ## Project publish path
 `~/workspace/personal/training app/public/media`
 
+## Exercise cards added on 2026-04-13
+- Source zip used: `~/Downloads/exercise_cards_zip.zip`
+- Published folder: `public/media/images/exercise-cards/`
+- Catalog file: `src/data/exerciseCardCatalog.ts`
+- Matching rule: one PNG per exercise `slug`
+- Current intent: these local cards should replace incorrect external search results in the training view
+
 ## Local media update
 1. Actualiza archivos en `docs/.../media`.
 2. Sincroniza al proyecto:
@@ -22,6 +29,7 @@ python3 scripts/generate_media_catalog.py
 - `origin=local`: archivos versionados en repo.
 - `origin=external`: recursos guardados por URL desde internet.
 - `role=single|multi|reference`: clasificacion para consulta.
+- Exercise cards added from the zip use `origin=local` and `role=single`.
 
 ## Internet search
 - Proveedores actuales:
@@ -35,3 +43,9 @@ Para dejar un recurso externo permanente:
 2. Guardarlo en `public/media/`.
 3. Actualizar catalogo/metadata.
 4. Commit + deploy.
+
+## Current troubleshooting note
+- Aunque las imagenes locales ya estan desplegadas en Pages, si un usuario no las ve dentro de la app:
+  - revisar caché del PWA instalado
+  - revisar `localStorage` persistido
+  - revisar si una referencia externa vieja sigue ganando en resolucion

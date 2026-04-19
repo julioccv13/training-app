@@ -17,12 +17,14 @@ Push a `main` dispara `.github/workflows/deploy-pages.yml`.
 
 ## Post-deploy checks
 - App carga sin 404.
+- `Inicio` muestra rutina activa, ultimo dia entrenado y siguiente dia sugerido.
 - Selector de rutina funciona.
 - Cambio de rutina pide confirmacion (si lock activo).
+- `Entreno` carga el dia elegido y muestra la imagen del ejercicio.
 - Tracking guarda logs en rutina activa.
 - e1RM aparece por ejercicio despues de 3+ sets validos (1-10 reps).
 - Al guardar sesion, `targetWeight` se actualiza automaticamente en ejercicios elegibles.
-- Media local y externa se visualiza.
+- Si la app esta instalada como PWA, verificar tambien que no haya cache vieja del service worker.
 
 ## Add routine from code
 Archivo: `src/data/seedRoutine.ts`
@@ -38,17 +40,18 @@ npm run build
 ```
 
 ## Modify routine from app
-Pestaña `Rutinas`:
-- Seleccionar rutina activa (con confirmacion por lock).
-- Editar nombre/descripcion de rutina activa.
-- Crear rutina desde cero.
-- Agregar/editar/eliminar dias.
-- Agregar/editar/eliminar ejercicios.
-- El ajuste de `targetWeight` por e1RM ocurre automatico al guardar una sesion en `Track`.
+UI actual:
+- Solo se mantiene seleccion de rutina activa desde `Inicio`.
+- El lock de rutina se controla desde `Ajustes`.
+- La edicion estructural de rutinas queda fuera del flujo principal y debe hacerse por codigo hasta nueva simplificacion.
+- El ajuste de `targetWeight` por e1RM ocurre automatico al guardar una sesion en `Entreno`.
 
 ## Media update
-- Local: sync + regenerate catalog.
-- External: buscar en `Media`, guardar URL en biblioteca.
+- Local exercise cards versionadas:
+  - carpeta: `public/media/images/exercise-cards/`
+  - catalogo: `src/data/exerciseCardCatalog.ts`
+- La resolucion de imagenes ahora debe priorizar media local por `slug`.
+- Si aparecen imagenes incorrectas en la app publicada, revisar cache del PWA y estado persistido antes de tocar el catalogo.
 
 ## Backup
 Pestaña `Ajustes`:
