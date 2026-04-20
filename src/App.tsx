@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ChangeEvent } from 'react'
+import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
 import './App.css'
 import {
   normalizeLogsState,
@@ -1261,7 +1262,22 @@ function App() {
             ×
           </button>
           <div className="image-lightbox-content" onClick={(event) => event.stopPropagation()}>
-            <img src={expandedImage.url} alt={expandedImage.alt} />
+            <TransformWrapper
+              minScale={1}
+              maxScale={6}
+              initialScale={1}
+              doubleClick={{ mode: 'toggle', step: 2 }}
+              wheel={{ step: 0.2 }}
+              pinch={{ step: 5 }}
+              panning={{ velocityDisabled: true }}
+            >
+              <TransformComponent
+                wrapperClass="image-lightbox-zoom-wrapper"
+                contentClass="image-lightbox-zoom-content"
+              >
+                <img src={expandedImage.url} alt={expandedImage.alt} draggable={false} />
+              </TransformComponent>
+            </TransformWrapper>
           </div>
         </div>
       ) : null}
