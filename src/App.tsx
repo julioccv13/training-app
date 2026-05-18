@@ -159,8 +159,9 @@ const createDraftForExercise = (
   exercise: RoutineExercise,
   lastPerformance: ExerciseLastPerformance | undefined,
   suggestedWeight: number | null,
+  preferredWeight?: number | null,
 ): { sets: WorkoutSet[]; notes: string } => {
-  const prefilledWeight = lastPerformance?.lastWeight ?? suggestedWeight ?? exercise.targetWeight
+  const prefilledWeight = preferredWeight ?? lastPerformance?.lastWeight ?? suggestedWeight ?? exercise.targetWeight
 
   return {
     sets: [
@@ -472,7 +473,12 @@ function App() {
 
     setWorkoutDraft((prev) => ({
       ...prev,
-      [exercise.id]: createDraftForExercise(exercise, lastPerformanceByExercise.get(exercise.id), meta.suggestedWeight),
+      [exercise.id]: createDraftForExercise(
+        exercise,
+        lastPerformanceByExercise.get(exercise.id),
+        meta.suggestedWeight,
+        meta.suggestedWeight,
+      ),
     }))
 
     setUiMessage(`Objetivo de ${exercise.name} actualizado a ${meta.suggestedWeight} ${settings.units} (e1RM).`)
@@ -952,6 +958,19 @@ function App() {
               const e1rmMeta = e1rmByExercise.get(exercise.id)
               const hasStableE1rm = Boolean(e1rmMeta && e1rmMeta.sampleCount >= MIN_E1RM_SAMPLES)
               const lastPerformance = lastPerformanceByExercise.get(exercise.id)
+              const suggestedWeight = hasStableE1rm ? (e1rmMeta?.suggestedWeight ?? null) : null
+              const plannedWeight = draft?.sets[0]?.weight ?? 0
+              const lastWeight = lastPerformance?.lastWeight ?? null
+              const plannedWeightBasis =
+                plannedWeight <= 0
+                  ? 'Completa el peso en el primer set'
+                  : suggestedWeight !== null && plannedWeight === suggestedWeight
+                    ? `Basado en e1RM para ${e1rmMeta?.anchorReps ?? exercise.targetReps} reps`
+                    : lastWeight !== null && plannedWeight === lastWeight
+                      ? `Basado en ultimo peso: ${lastWeight} ${settings.units}`
+                      : exercise.targetWeight > 0 && plannedWeight === exercise.targetWeight
+                        ? 'Basado en objetivo guardado'
+                        : 'Ajustado en esta sesion'
               const mediaItem = exerciseMediaById.get(exercise.id)
               const mediaUrl =
                 mediaItem?.origin === 'local'
@@ -997,30 +1016,26 @@ function App() {
                           <strong>
                             {exercise.targetSets} x {exercise.targetReps}
                           </strong>
-                          <span>Objetivo base: {exercise.targetWeight} {settings.units}</span>
+                          <span>Objetivo guardado: {exercise.targetWeight} {settings.units}</span>
                         </div>
                       </div>
 
                       <div className="stats-grid">
                         <div className="stat-tile">
-                          <span className="stat-label">Ultimo peso</span>
+                          <span className="stat-label">Peso para hoy</span>
                           <strong>
-                            {lastPerformance?.lastWeight !== null && lastPerformance?.lastWeight !== undefined
-                              ? `${lastPerformance.lastWeight} ${settings.units}`
+                            {plannedWeight > 0
+                              ? `${plannedWeight} ${settings.units}`
                               : 'Sin dato'}
                           </strong>
-                          <span className="stat-subtle">
-                            {lastPerformance
-                              ? `${lastPerformance.completedSets || lastPerformance.log.sets.length} sets | reps ${lastPerformance.repsSummary}`
-                              : 'Todavia no registras este ejercicio'}
-                          </span>
+                          <span className="stat-subtle">{plannedWeightBasis}</span>
                         </div>
 
                         <div className="stat-tile">
-                          <span className="stat-label">Peso sugerido</span>
+                          <span className="stat-label">Sugerencia e1RM</span>
                           <strong>
-                            {hasStableE1rm && e1rmMeta?.suggestedWeight !== null
-                              ? `${e1rmMeta?.suggestedWeight ?? 0} ${settings.units}`
+                            {suggestedWeight !== null
+                              ? `${suggestedWeight} ${settings.units}`
                               : 'Sin sugerencia'}
                           </strong>
                           <span className="stat-subtle">
@@ -1035,7 +1050,11 @@ function App() {
                           <strong>
                             {lastPerformance ? formatSessionTimestamp(lastPerformance.log.createdAt) : 'Sin historial'}
                           </strong>
-                          <span className="stat-subtle">{trackDay?.name ?? ''}</span>
+                          <span className="stat-subtle">
+                            {lastPerformance
+                              ? `${lastPerformance.log.dayName} | ${lastPerformance.completedSets || lastPerformance.log.sets.length} sets | reps ${lastPerformance.repsSummary}`
+                              : 'Todavia no registras este ejercicio'}
+                          </span>
                         </div>
                       </div>
 
