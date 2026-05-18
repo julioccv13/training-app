@@ -163,10 +163,12 @@ const createDraftForExercise = (
   const prefilledWeight = lastPerformance?.lastWeight ?? suggestedWeight ?? exercise.targetWeight
 
   return {
-    sets: Array.from({ length: Math.max(exercise.targetSets, 1) }, () => ({
-      ...emptyWorkoutSet(),
-      weight: prefilledWeight > 0 ? prefilledWeight : 0,
-    })),
+    sets: [
+      {
+        ...emptyWorkoutSet(),
+        weight: prefilledWeight > 0 ? prefilledWeight : 0,
+      },
+    ],
     notes: '',
   }
 }
@@ -1045,98 +1047,58 @@ function App() {
                         </div>
                       ) : null}
 
-                      <div className="sets-table-wrap">
-                        <table className="sets-table">
-                          <thead>
-                            <tr>
-                              <th>Set</th>
-                              <th>Reps</th>
-                              <th>Peso</th>
-                              <th>OK</th>
-                              <th></th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {(draft?.sets ?? []).map((set, index) => (
-                              <tr key={set.id}>
-                                <td>{index + 1}</td>
-                                <td>
+                      <div className="sets-card">
+                        <div className="sets-card-head">
+                          <strong>Sets</strong>
+                          <span>
+                            {draft?.sets.length ?? 0} {(draft?.sets.length ?? 0) === 1 ? 'set' : 'sets'}
+                          </span>
+                        </div>
+
+                        <div className="set-lines">
+                          {(draft?.sets ?? []).map((set, index) => (
+                            <div key={set.id} className="set-line">
+                              <span className="set-number">{index + 1}</span>
+                              <div className="set-fields">
+                                <label>
+                                  Reps
                                   <input
                                     type="number"
                                     min={0}
                                     value={set.reps}
                                     onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'reps', event.target.value)}
                                   />
-                                </td>
-                                <td>
+                                </label>
+                                <label>
+                                  Peso
                                   <input
                                     type="number"
                                     min={0}
                                     value={set.weight}
                                     onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'weight', event.target.value)}
                                   />
-                                </td>
-                                <td>
-                                  <input
-                                    type="checkbox"
-                                    checked={set.done}
-                                    onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'done', event.target.checked)}
-                                  />
-                                </td>
-                                <td>
-                                  <button type="button" onClick={() => removeWorkoutSet(exercise.id, set.id)}>
-                                    -
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      <div className="sets-mobile-list">
-                        {(draft?.sets ?? []).map((set, index) => (
-                          <article key={`mobile-${set.id}`} className="set-mobile-card">
-                            <div className="set-mobile-head">
-                              <strong>Set {index + 1}</strong>
-                              <button type="button" onClick={() => removeWorkoutSet(exercise.id, set.id)} aria-label={`Eliminar set ${index + 1}`}>
+                                </label>
+                              </div>
+                              <label className="set-check" aria-label={`Set ${index + 1} completado`}>
+                                <input
+                                  type="checkbox"
+                                  checked={set.done}
+                                  onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'done', event.target.checked)}
+                                />
+                              </label>
+                              <button
+                                type="button"
+                                className="set-remove"
+                                onClick={() => removeWorkoutSet(exercise.id, set.id)}
+                                aria-label={`Eliminar set ${index + 1}`}
+                              >
                                 -
                               </button>
                             </div>
-                            <div className="set-mobile-grid">
-                              <label>
-                                Reps
-                                <input
-                                  type="number"
-                                  min={0}
-                                  value={set.reps}
-                                  onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'reps', event.target.value)}
-                                />
-                              </label>
-                              <label>
-                                Peso
-                                <input
-                                  type="number"
-                                  min={0}
-                                  value={set.weight}
-                                  onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'weight', event.target.value)}
-                                />
-                              </label>
-                            </div>
-                            <label className="checkbox-row">
-                              <input
-                                type="checkbox"
-                                checked={set.done}
-                                onChange={(event) => updateWorkoutSet(exercise.id, set.id, 'done', event.target.checked)}
-                              />
-                              <span>Set completado</span>
-                            </label>
-                          </article>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
 
-                      <div className="row-actions">
-                        <button type="button" onClick={() => addWorkoutSet(exercise.id)}>
+                        <button type="button" className="add-set-button" onClick={() => addWorkoutSet(exercise.id)}>
                           Agregar set
                         </button>
                       </div>
