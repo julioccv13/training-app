@@ -58,6 +58,15 @@ const mainRoutine: Routine = {
   isArchived: false,
 }
 
+const upperLowerRoutine: Routine = {
+  id: 'routine-upper-lower',
+  name: 'Rutina U/L',
+  description: 'Split Upper / Lower de dos dias extraido de los videos: un dia de torso y un dia de pierna con core y antebrazos. Rango de trabajo 5-10 reps.',
+  createdAt: SEED_TIMESTAMP,
+  updatedAt: SEED_TIMESTAMP,
+  isArchived: false,
+}
+
 const dayTemplates: Array<Omit<RoutineDay, 'routineId'>> = [
   { id: 'day-1', name: 'Dia 1', focus: 'Torso A (hombros/espalda)', order: 1 },
   { id: 'day-2', name: 'Dia 2', focus: 'Pierna A (isquios/gluteo)', order: 2 },
@@ -972,6 +981,129 @@ const mainRoutineExerciseTemplates: Array<Omit<RoutineExercise, 'routineId'>> = 
   },
 ]
 
+const upperLowerRoutineDayTemplates: Array<Omit<RoutineDay, 'routineId'>> = [
+  { id: 'ul-day-upper', name: 'Upper Day', focus: 'Pecho / hombro / espalda / brazos', order: 1 },
+  { id: 'ul-day-lower', name: 'Leg Day', focus: 'Pierna / core / antebrazos', order: 2 },
+]
+
+const upperLowerRoutineExerciseTemplates: Array<Omit<RoutineExercise, 'routineId'>> = [
+  {
+    id: 'ul-ex-pec-deck-fly', dayId: 'ul-day-upper', slug: 'ul-pec-deck-fly', name: 'Aperturas en maquina (Pec Deck)',
+    muscleGroup: 'Pecho', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 75,
+    notes: 'Controla el estiramiento y aprieta en el cierre.', order: 1,
+  },
+  {
+    id: 'ul-ex-incline-chest-press', dayId: 'ul-day-upper', slug: 'ul-incline-chest-press', name: 'Press inclinado en maquina',
+    muscleGroup: 'Pecho superior', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 90,
+    notes: 'Manten el hombro estable durante toda la serie.', order: 2,
+  },
+  {
+    id: 'ul-ex-lateral-raise', dayId: 'ul-day-upper', slug: 'ul-lateral-raise', name: 'Elevaciones laterales',
+    muscleGroup: 'Deltoides lateral', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 60,
+    notes: 'Sube con control sin balanceo.', order: 3,
+  },
+  {
+    id: 'ul-ex-shoulder-press', dayId: 'ul-day-upper', slug: 'ul-shoulder-press', name: 'Press de hombro',
+    muscleGroup: 'Hombro', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 90,
+    notes: 'Recorrido completo sin bloquear en exceso arriba.', order: 4,
+  },
+  {
+    id: 'ul-ex-triceps-extension', dayId: 'ul-day-upper', slug: 'ul-triceps-extension', name: 'Extension de triceps',
+    muscleGroup: 'Triceps', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 60,
+    notes: 'Extiende completo sin abrir los codos.', order: 5,
+  },
+  {
+    id: 'ul-ex-jm-press', dayId: 'ul-day-upper', slug: 'ul-jm-press', name: 'JM Press',
+    muscleGroup: 'Triceps', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 75,
+    notes: 'Baja controlado hacia el cuello y empuja fuerte.', order: 6,
+  },
+  {
+    id: 'ul-ex-lat-pulldown', dayId: 'ul-day-upper', slug: 'ul-lat-pulldown', name: 'Jalon al pecho',
+    muscleGroup: 'Dorsales', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 90,
+    notes: 'Lleva los codos hacia el torso y controla la subida.', order: 7,
+  },
+  {
+    id: 'ul-ex-close-grip-row', dayId: 'ul-day-upper', slug: 'ul-close-grip-row', name: 'Remo agarre cerrado',
+    muscleGroup: 'Espalda media', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 90,
+    notes: 'Retrae escapulas y evita rotar el torso.', order: 8,
+  },
+  {
+    id: 'ul-ex-machine-high-row', dayId: 'ul-day-upper', slug: 'ul-machine-high-row', name: 'Remo alto en maquina',
+    muscleGroup: 'Dorsales', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 90,
+    notes: 'Tira desde arriba buscando estiramiento del dorsal.', order: 9,
+  },
+  {
+    id: 'ul-ex-t-bar-row', dayId: 'ul-day-upper', slug: 'ul-t-bar-row', name: 'Remo en T',
+    muscleGroup: 'Espalda media', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 90,
+    notes: 'Manten la espalda neutra durante todo el recorrido.', order: 10,
+  },
+  {
+    id: 'ul-ex-preacher-curl', dayId: 'ul-day-upper', slug: 'ul-preacher-curl', name: 'Curl predicador',
+    muscleGroup: 'Biceps', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 75,
+    notes: 'Controla la bajada y no despegues los codos del apoyo.', order: 11,
+  },
+  {
+    id: 'ul-ex-crunch-maquina-upper', dayId: 'ul-day-upper', slug: 'ul-crunch-maquina-upper', name: 'Crunch en maquina',
+    muscleGroup: 'Core', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 45,
+    notes: 'Flexiona la columna con control, sin tirar del cuello.', order: 12,
+  },
+  {
+    id: 'ul-ex-hanging-knee-raise-upper', dayId: 'ul-day-upper', slug: 'ul-hanging-knee-raise-upper', name: 'Levanta rodillas colgado',
+    muscleGroup: 'Core', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 45,
+    notes: 'Sube las rodillas con control y evita balancearte.', order: 13,
+  },
+  {
+    id: 'ul-ex-seated-leg-curl', dayId: 'ul-day-lower', slug: 'ul-seated-leg-curl', name: 'Curl femoral sentado',
+    muscleGroup: 'Isquiotibiales', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 75,
+    notes: 'Baja controlado sin despegar la cadera.', order: 1,
+  },
+  {
+    id: 'ul-ex-cable-hinge', dayId: 'ul-day-lower', slug: 'ul-cable-hinge', name: 'Hinge en polea',
+    muscleGroup: 'Isquiotibiales / gluteo', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 90,
+    notes: 'Bisagra de cadera con espalda neutra.', order: 2,
+  },
+  {
+    id: 'ul-ex-single-leg-extension', dayId: 'ul-day-lower', slug: 'ul-single-leg-extension', name: 'Extension de cuadriceps unilateral',
+    muscleGroup: 'Cuadriceps', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 60,
+    notes: 'Trabaja una pierna a la vez con pausa arriba.', order: 3,
+  },
+  {
+    id: 'ul-ex-leg-press', dayId: 'ul-day-lower', slug: 'ul-leg-press', name: 'Prensa',
+    muscleGroup: 'Cuadriceps', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 90,
+    notes: 'Sin despegar la lumbar del respaldo.', order: 4,
+  },
+  {
+    id: 'ul-ex-abduction-machine', dayId: 'ul-day-lower', slug: 'ul-abduction-machine', name: 'Abduccion en maquina',
+    muscleGroup: 'Gluteo medio', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 60,
+    notes: 'Control del retorno y rango completo.', order: 5,
+  },
+  {
+    id: 'ul-ex-adduction-machine', dayId: 'ul-day-lower', slug: 'ul-adduction-machine', name: 'Aduccion en maquina',
+    muscleGroup: 'Aductores', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 60,
+    notes: 'Aprieta en el cierre sin rebote.', order: 6,
+  },
+  {
+    id: 'ul-ex-hip-thrust', dayId: 'ul-day-lower', slug: 'ul-hip-thrust', name: 'Hip thrust',
+    muscleGroup: 'Gluteos', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 90,
+    notes: 'Pausa arriba apretando gluteos.', order: 7,
+  },
+  {
+    id: 'ul-ex-calf-raise', dayId: 'ul-day-lower', slug: 'ul-calf-raise', name: 'Elevacion de gemelos',
+    muscleGroup: 'Gemelos', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 60,
+    notes: 'Rango completo con pausa breve en el pico.', order: 8,
+  },
+  {
+    id: 'ul-ex-crunch-maquina-lower', dayId: 'ul-day-lower', slug: 'ul-crunch-maquina-lower', name: 'Crunch en maquina',
+    muscleGroup: 'Core', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 45,
+    notes: 'Flexiona la columna con control, sin tirar del cuello.', order: 9,
+  },
+  {
+    id: 'ul-ex-hanging-knee-raise-lower', dayId: 'ul-day-lower', slug: 'ul-hanging-knee-raise-lower', name: 'Levanta rodillas colgado',
+    muscleGroup: 'Core', targetSets: 3, targetReps: '5-10', targetWeight: 0, restSeconds: 45,
+    notes: 'Sube las rodillas con control y evita balancearte.', order: 10,
+  },
+]
+
 const fiveDayStrengthSeedDays: RoutineDay[] = fiveDayStrengthDayTemplates.map((day) => ({
   ...day,
   routineId: fiveDayStrengthRoutine.id,
@@ -992,6 +1124,16 @@ const mainRoutineSeedExercises: RoutineExercise[] = mainRoutineExerciseTemplates
   routineId: mainRoutine.id,
 }))
 
+const upperLowerRoutineSeedDays: RoutineDay[] = upperLowerRoutineDayTemplates.map((day) => ({
+  ...day,
+  routineId: upperLowerRoutine.id,
+}))
+
+const upperLowerRoutineSeedExercises: RoutineExercise[] = upperLowerRoutineExerciseTemplates.map((exercise) => ({
+  ...exercise,
+  routineId: upperLowerRoutine.id,
+}))
+
 const builtInRoutineSeeds = [
   {
     routine: workoutTrackerRoutine,
@@ -1007,6 +1149,11 @@ const builtInRoutineSeeds = [
     routine: mainRoutine,
     days: mainRoutineSeedDays,
     exercises: mainRoutineSeedExercises,
+  },
+  {
+    routine: upperLowerRoutine,
+    days: upperLowerRoutineSeedDays,
+    exercises: upperLowerRoutineSeedExercises,
   },
 ]
 
