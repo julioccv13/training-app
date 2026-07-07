@@ -61,7 +61,7 @@ const mainRoutine: Routine = {
 const upperLowerRoutine: Routine = {
   id: 'routine-upper-lower',
   name: 'Rutina U/L',
-  description: 'Split Upper / Lower de dos dias extraido de los videos: un dia de torso y un dia de pierna con core y antebrazos. Rango de trabajo 5-10 reps.',
+  description: 'Split Upper / Lower de dos dias extraido de los videos: un dia de torso y un dia de pierna con core. Rango de trabajo 5-10 reps.',
   createdAt: SEED_TIMESTAMP,
   updatedAt: SEED_TIMESTAMP,
   isArchived: false,
@@ -983,7 +983,7 @@ const mainRoutineExerciseTemplates: Array<Omit<RoutineExercise, 'routineId'>> = 
 
 const upperLowerRoutineDayTemplates: Array<Omit<RoutineDay, 'routineId'>> = [
   { id: 'ul-day-upper', name: 'Upper Day', focus: 'Pecho / hombro / espalda / brazos', order: 1 },
-  { id: 'ul-day-lower', name: 'Leg Day', focus: 'Pierna / core / antebrazos', order: 2 },
+  { id: 'ul-day-lower', name: 'Leg Day', focus: 'Pierna / core', order: 2 },
 ]
 
 const upperLowerRoutineExerciseTemplates: Array<Omit<RoutineExercise, 'routineId'>> = [
